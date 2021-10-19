@@ -39,3 +39,14 @@ async def set_temperature(temperature: int) -> str:
   controller.set_target_temp(temperature)
   return "Temperature set to {} degrees fahrenheit".format(temperature)
 
+@app.get("/usable")
+async def get_usable() -> dict:
+  return { "cooler": controller.cooler_usable, "furnace": controller.furnace_usable }
+
+
+@app.put("/usable")
+async def set_usable(cooler: bool, furnace: bool):
+  controller.cooler_usable = cooler
+  controller.furnace_usable = furnace
+  return "Success"
+

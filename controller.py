@@ -27,6 +27,8 @@ class Controller:
 
     self._dht = adafruit_dht.DHT11(board.D4, use_pulseio=False)
     self.target_temp = 72
+    self.cooler_usable = True
+    self.furnace_usable = True
 
 
   def get_status(self):
@@ -87,17 +89,26 @@ class Controller:
 
   def fan_low_on(self):
     print("Turning on cooler to low")
-    self.set_pins(True, True, False, False)
+    if self.cooler_usable:
+      self.set_pins(True, True, False, False)
+    else:
+      self.all_off()
 
 
   def fan_hi_on(self):
     print("Turning on cooler to high")
-    self.set_pins(True, False, True, False)
+    if self.cooler_usable:
+      self.set_pins(True, False, True, False)
+    else:
+      self.all_off()
 
 
   def furnace_on(self):
     print("Turning on furnace")
-    self.set_pins(False, False, False, True)
+    if self.furnace_usable:
+      self.set_pins(False, False, False, True)
+    else:
+      self.all_off()
 
 
   def all_off(self):
@@ -122,6 +133,4 @@ class Controller:
     GPIO.output(FAN_L_PIN, fan_low_pin)
     GPIO.output(FAN_H_PIN, fan_high_pin)
     GPIO.output(FURNACE_PIN, furnace_pin)
-
-   
 
