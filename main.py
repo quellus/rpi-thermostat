@@ -13,15 +13,18 @@ class Status(BaseModel):
   fan_low: bool
   fan_high: bool
   furnace: bool
+  temp: int
+  humidity: int
 
 
 @app.on_event("startup")
-@repeat_every(seconds=1)
+@repeat_every(seconds=10)
 async def drive_status():
   controller.drive_status()
 
 
 @app.get("/", response_model=Status)
+#@app.get("/")
 async def root() -> dict:
   return controller.get_status()
 

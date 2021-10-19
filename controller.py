@@ -37,18 +37,30 @@ class Controller:
         status[key] = False
       else:
         status[key] = True
-      return status
+    status["temp"] = self.get_temperature()
+    status["humidity"] = self.get_humidity()
+    return status
 
 
   def get_temperature(self):
     try:
       temperature_c = self._dht.temperature
       temperature_f = temperature_c * (9 / 5) + 32
-      print(temperature_f)
+      print("temperature:", temperature_f)
       return temperature_f
     except RuntimeError as e:
       print("Temperature didn't read, trying again")
       return self.get_temperature()
+
+
+  def get_humidity(self):
+    try:
+      humidity = self._dht.humidity
+      print("humidity:", humidity)
+      return humidity
+    except RuntimeError as e:
+      print("Humidity didn't read, trying again")
+      return self.get_humidity()
 
   
   def set_target_temp(self, temp: int):
@@ -99,6 +111,7 @@ class Controller:
 
   def drive_status(self):
     try:
+      self.get_humidity()
       temp_diff = self.get_temperature() - self.target_temp
       print("temperature difference is {}".format(round(temp_diff)))
       if (temp_diff <= -2):
