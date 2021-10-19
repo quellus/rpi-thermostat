@@ -68,47 +68,6 @@ class Controller:
     self.target_temp = temp
 
 
-  def fan_low_on(self):
-    print("Turning on cooler to low")
-    GPIO.output(PUMP_PIN, ON)
-    GPIO.output(FAN_L_PIN, ON)
-    GPIO.output(FAN_H_PIN, OFF)
-    GPIO.output(FURNACE_PIN, OFF)
-
-
-  def fan_hi_on(self):
-    print("Turning on cooler to high")
-    GPIO.output(PUMP_PIN, ON)
-    GPIO.output(FAN_L_PIN, OFF)
-    GPIO.output(FAN_H_PIN, ON)
-    GPIO.output(FURNACE_PIN, OFF)
-
-
-  def furnace_on(self):
-    print("Turning on furnace")
-    GPIO.output(PUMP_PIN, OFF)
-    GPIO.output(FAN_L_PIN, OFF)
-    GPIO.output(FAN_H_PIN, OFF)
-    GPIO.output(FURNACE_PIN, ON)
-
-
-  def all_off(self):
-    print("Turning cooler and furnace off")
-    GPIO.output(PUMP_PIN, OFF)
-    GPIO.output(FAN_L_PIN, OFF)
-    GPIO.output(FAN_H_PIN, OFF)
-    GPIO.output(FURNACE_PIN, OFF)
-
-
-  # DO NOT USE IN PRODUCTION
-  def all_on(self):
-    print("Turning cooler and furnace on")
-    GPIO.output(PUMP_PIN, ON)
-    GPIO.output(FAN_L_PIN, ON)
-    GPIO.output(FAN_H_PIN, ON)
-    GPIO.output(FURNACE_PIN, ON)
-
-
   def drive_status(self):
     try:
       self.get_humidity()
@@ -124,4 +83,45 @@ class Controller:
         self.all_off()
     except Exception as e:
       print(e)
+
+
+  def fan_low_on(self):
+    print("Turning on cooler to low")
+    self.set_pins(True, True, False, False)
+
+
+  def fan_hi_on(self):
+    print("Turning on cooler to high")
+    self.set_pins(True, False, True, False)
+
+
+  def furnace_on(self):
+    print("Turning on furnace")
+    self.set_pins(False, False, False, True)
+
+
+  def all_off(self):
+    print("Turning cooler and furnace off")
+    self.set_pins(False, False, False, False)
+
+
+  def set_pins(self, pump: bool, fan_low: bool, fan_high: bool, furnace: bool):
+    pump_pin = OFF
+    fan_low_pin = OFF
+    fan_high_pin = OFF
+    furnace_pin = OFF
+    if pump:
+      pump_pin = ON
+    if fan_low:
+      fan_low_pin = ON
+    if fan_high:
+      fan_high_pin = ON
+    if furnace:
+      furnace_pin = ON
+    GPIO.output(PUMP_PIN, pump_pin)
+    GPIO.output(FAN_L_PIN, fan_low_pin)
+    GPIO.output(FAN_H_PIN, fan_high_pin)
+    GPIO.output(FURNACE_PIN, furnace_pin)
+
+   
 
