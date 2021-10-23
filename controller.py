@@ -28,9 +28,13 @@ class Controller:
 
     self._dht = adafruit_dht.DHT22(board.D4, use_pulseio=False)
 
-    pins = models.Pins(pump = False, fan_on = False, fan_speed = False, furnace = False)
-    usable = models.Usable(cooler = True, furnace = True)
-    self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temp = 72, humidity = 30)
+    try:
+      f = open("status.json", "r")
+      self.status = models.Status.parse_raw(f.read())
+    except Exception:
+      pins = models.Pins(pump = False, fan_on = False, fan_speed = False, furnace = False)
+      usable = models.Usable(cooler = True, furnace = True)
+      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temp = 72, humidity = 30)
 
 
   def get_status(self):
@@ -42,7 +46,7 @@ class Controller:
       temperature_c = self._dht.temperature
       temperature_f = temperature_c * (9 / 5) + 32
       print("temperature:", temperature_f)
-      return temperature_f
+      return round(temperature_f, 3)
     except RuntimeError as e:
       print("Temperature didn't read, trying again")
       return self.get_temperature()
@@ -82,6 +86,7 @@ class Controller:
         self.fan_low_on()
       else:
         self.all_off()
+      self.write_status()
     except Exception as e:
       print(e)
 
@@ -134,4 +139,9 @@ class Controller:
     GPIO.output(FAN_ON_PIN, fan_on_pin)
     GPIO.output(FAN_SPEED_PIN, fan_speed_pin)
     GPIO.output(FURNACE_PIN, furnace_pin)
+
+  def write_status(self):
+    f = open("status.json", "w")
+    f.write(self.status.json())
+    f.close()
 
