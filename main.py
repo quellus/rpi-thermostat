@@ -3,18 +3,10 @@ from fastapi_restful.tasks import repeat_every
 from pydantic import BaseModel
 
 from controller import Controller
+import models
 
 app = FastAPI()
 controller = Controller()
-
-
-class Status(BaseModel):
-  pump: bool
-  fan_on: bool
-  fan_speed: bool
-  furnace: bool
-  temp: int
-  humidity: int
 
 
 @app.on_event("startup")
@@ -23,8 +15,7 @@ async def drive_status():
   controller.drive_status()
 
 
-@app.get("/", response_model=Status)
-#@app.get("/")
+@app.get("/", response_model=models.Status)
 async def root() -> dict:
   return controller.get_status()
 
@@ -39,14 +30,14 @@ async def set_temperature(temperature: int) -> str:
   controller.set_target_temp(temperature)
   return "Temperature set to {} degrees fahrenheit".format(temperature)
 
-@app.get("/usable")
+
+@app.get("/usable", response_model=models.Usable)
 async def get_usable() -> dict:
-  return { "cooler": controller.cooler_usable, "furnace": controller.furnace_usable }
+  return controller.status.usable
 
 
 @app.put("/usable")
 async def set_usable(cooler: bool, furnace: bool):
-  controller.cooler_usable = cooler
-  controller.furnace_usable = furnace
+  controller.set_usable(cooler, furnace)
   return "Success"
 

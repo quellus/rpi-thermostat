@@ -1,6 +1,7 @@
 import adafruit_dht
 import board
 import RPi.GPIO as GPIO
+import models
 
 PUMP_PIN = 5
 FAN_ON_PIN = 6
@@ -25,23 +26,15 @@ class Controller:
     GPIO.setup(FAN_SPEED_PIN, GPIO.OUT, initial=OFF)
     GPIO.setup(FURNACE_PIN, GPIO.OUT, initial=OFF)
 
-    self._dht = adafruit_dht.DHT11(board.D4, use_pulseio=False)
-    self.target_temp = 72
-    self.cooler_usable = True
-    self.furnace_usable = True
+    self._dht = adafruit_dht.DHT22(board.D4, use_pulseio=False)
+
+    pins = models.Pins(pump = False, fan_on = False, fan_speed = False, furnace = False)
+    usable = models.Usable(cooler = True, furnace = True)
+    self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temp = 72, humidity = 30)
 
 
   def get_status(self):
-    status = {}
-    for key in PINS.keys():
-      pin_stat = GPIO.input(PINS[key])
-      if pin_stat == 1:
-        status[key] = False
-      else:
-        status[key] = True
-    status["temp"] = self.get_temperature()
-    status["humidity"] = self.get_humidity()
-    return status
+    return self.status
 
 
   def get_temperature(self):
@@ -67,14 +60,20 @@ class Controller:
   
   def set_target_temp(self, temp: int):
     print("target temp set to {}".format(temp))
-    self.target_temp = temp
+    self.status.target_temp = temp
+
+
+  def set_usable(self, cooler: bool, furnace: bool):
+      usable = models.Usable(cooler = cooler, furnace = furnace)
+      self.status.usable = usable
 
 
   def drive_status(self):
     try:
-      self.get_humidity()
-      temp_diff = self.get_temperature() - self.target_temp
-      print("temperature difference is {}".format(round(temp_diff)))
+      self.status.humidity = self.get_humidity()
+      self.status.temp = self.get_temperature()
+      temp_diff = self.status.temp - self.status.target_temp
+      print("temperature difference is {}".format(round(temp_diff, 3)))
       if (temp_diff <= -2):
         self.furnace_on()
       elif temp_diff >= 5:
@@ -89,7 +88,7 @@ class Controller:
 
   def fan_low_on(self):
     print("Turning on cooler to low")
-    if self.cooler_usable:
+    if self.status.usable.cooler:
       self.set_pins(True, True, False, False)
     else:
       self.all_off()
@@ -97,7 +96,7 @@ class Controller:
 
   def fan_hi_on(self):
     print("Turning on cooler to high")
-    if self.cooler_usable:
+    if self.status.usable.cooler:
       self.set_pins(True, True, True, False)
     else:
       self.all_off()
@@ -105,7 +104,7 @@ class Controller:
 
   def furnace_on(self):
     print("Turning on furnace")
-    if self.furnace_usable:
+    if self.status.usable.furnace:
       self.set_pins(False, False, False, True)
     else:
       self.all_off()
@@ -117,6 +116,8 @@ class Controller:
 
 
   def set_pins(self, pump: bool, fan_on: bool, fan_speed: bool, furnace: bool):
+    pins_status = models.Pins(pump = pump, fan_on = fan_on, fan_speed = fan_speed, furnace = furnace)
+    self.status.pins = pins_status
     pump_pin = OFF
     fan_on_pin = OFF
     fan_speed_pin = OFF
