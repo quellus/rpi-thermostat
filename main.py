@@ -20,20 +20,15 @@ async def root() -> dict:
   return controller.get_status()
 
 
-@app.get("/get_temperature")
+@app.get("/temperature")
 async def get_temperature() -> float:
   return controller.get_temperature()
 
 
-@app.put("/set_temperature")
-async def set_temperature(temperature: int) -> str:
+@app.put("/target_temperature")
+async def set_target_temp(temperature: int) -> str:
   controller.set_target_temp(temperature)
   return "Temperature set to {} degrees fahrenheit".format(temperature)
-
-
-@app.get("/usable", response_model=models.Usable)
-async def get_usable() -> dict:
-  return controller.status.usable
 
 
 @app.put("/usable")
