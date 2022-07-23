@@ -1,0 +1,3 @@
+adafruit-circuitpython-dht
+fastapi-restful
+uvicorn[standard]
