@@ -2,6 +2,12 @@ import adafruit_dht
 import board
 import RPi.GPIO as GPIO
 import models
+import logging
+from systemd.journal import JournalHandler
+
+log = logging.getLogger("thermostat")
+log.addHandler(JournalHandler())
+log.setLevel(logging.INFO)
 
 PUMP_PIN = 5
 FAN_ON_PIN = 6
@@ -45,9 +51,11 @@ class Controller:
     try:
       temperature_c = self._dht.temperature
       temperature_f = temperature_c * (9 / 5) + 32
-      print("temperature:", temperature_f)
+      log.info("temperature: {}".format(temperature_f))
+      print("temperature: {}".format(temperature_f))
       return round(temperature_f, 3)
     except RuntimeError as e:
+      log.error("Temperature didn't read, trying again")
       print("Temperature didn't read, trying again")
       return self.get_temperature()
 
@@ -55,14 +63,17 @@ class Controller:
   def get_humidity(self):
     try:
       humidity = self._dht.humidity
-      print("humidity:", humidity)
+      log.info("humidity: {}".format(humidity))
+      print("humidity: {}".format(humidity))
       return humidity
     except RuntimeError as e:
+      log.error("Humidity didn't read, trying again")
       print("Humidity didn't read, trying again")
       return self.get_humidity()
 
   
   def set_target_temp(self, temp: int):
+    log.info("target temp set to {}".format(temp))
     print("target temp set to {}".format(temp))
     self.status.target_temp = temp
 
@@ -77,7 +88,6 @@ class Controller:
       self.status.humidity = self.get_humidity()
       self.status.temp = self.get_temperature()
       temp_diff = self.status.temp - self.status.target_temp
-      print("temperature difference is {}".format(round(temp_diff, 3)))
       if (temp_diff <= -2):
         self.furnace_on()
       elif temp_diff >= 5:
@@ -88,10 +98,12 @@ class Controller:
         self.all_off()
       self.write_status()
     except Exception as e:
+      log.critical(e)
       print(e)
 
 
   def fan_low_on(self):
+    log.info("Turning on cooler to low")
     print("Turning on cooler to low")
     if self.status.usable.cooler:
       self.set_pins(True, True, False, False)
@@ -100,6 +112,7 @@ class Controller:
 
 
   def fan_hi_on(self):
+    log.info("Turning on cooler to high")
     print("Turning on cooler to high")
     if self.status.usable.cooler:
       self.set_pins(True, True, True, False)
@@ -108,6 +121,7 @@ class Controller:
 
 
   def furnace_on(self):
+    log.info("Turning on furnace")
     print("Turning on furnace")
     if self.status.usable.furnace:
       self.set_pins(False, False, False, True)
@@ -116,6 +130,7 @@ class Controller:
 
 
   def all_off(self):
+    log.info("Turning cooler and furnace off")
     print("Turning cooler and furnace off")
     self.set_pins(False, False, False, False)
 
