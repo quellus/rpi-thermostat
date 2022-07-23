@@ -2,9 +2,12 @@
 
 A cooler and furnace controller run by a Raspberry Pi
 
-apt requirements:
+apt requirements:  
 build-essential python-dev python-openssl git libgpiod2 python3-rpi.gpio
 
-pip requirements:
+pip requirements:  
 adafruit-circuitpython-dht fastapi-restful uvicorn[standard]
 
+Running:
+
+`python -m uvicorn --host 0.0.0.0 main:app`
