@@ -1,0 +1,14 @@
+[Unit]
+Description=Python Daemon to control swamp cooler and furnace via FastAPI
+
+[Service]
+User=pi
+Group=pi
+ExecStart=python3 -m uvicorn main:app --host=0.0.0.0
+WorkingDirectory=/home/pi/rpi-thermostat/
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
