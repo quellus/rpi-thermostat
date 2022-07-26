@@ -28,9 +28,9 @@ async def drive_status():
   controller.drive_status()
 
 
-@app.get("/", response_model=object)
+@app.get("/", response_model=models.StatusObject)
 async def root() -> dict:
-  return {"status": controller.get_status()}
+  return models.StatusObject(status = controller.get_status())
 
 
 @app.get("/temperature")

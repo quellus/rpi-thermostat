@@ -20,4 +20,6 @@ class Status(BaseModel):
   humidity: int
 
 
+class StatusObject(BaseModel):
+  status: Status
 
