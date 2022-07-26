@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+    <meta name="description" content="Raspberry Pi Thermostat">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Raspberry Pi Thermostat</title>
+    <link href="css/styles.css" rel="stylesheet" type="text/css">
+    <script src="js/heartbeat.js"></script>
+  </head>
+  
+  <body>
+    <div>
+      <h2>Thermostat or whatever</h2>
+      <div>
+        <div class="card">
+        <p>Current temperature</p><p id="temperature">ERR</p>
+        </div>
+        <div class="card">
+        <p>Set temperature</p><p id="set-temperature">ERR</p>
+        <input id="temperature-input" type="number"></input><button type="button" onclick="setTemperature()">Submit</button>
+        </div>
+        <div class="card">
+        <p>Cooler</p><p id="cooler-status">ERR</p>
+        </div>
+        <div class="card">
+        <p>Furnace</p><p id="furnace-status">ERR</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
