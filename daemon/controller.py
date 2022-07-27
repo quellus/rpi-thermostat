@@ -3,6 +3,7 @@ import board
 import RPi.GPIO as GPIO
 import models
 import logging
+import time
 from systemd.journal import JournalHandler
 
 log = logging.getLogger("thermostat")
@@ -24,6 +25,8 @@ PINS = {
 ON = GPIO.LOW
 OFF = GPIO.HIGH
 
+CYCLE_TIME = 2 * 60 # minutes converted to seconds
+
 class Controller:
   def __init__(self):
     GPIO.setmode(GPIO.BCM)
@@ -33,6 +36,7 @@ class Controller:
     GPIO.setup(FURNACE_PIN, GPIO.OUT, initial=OFF)
 
     self._dht = adafruit_dht.DHT22(board.D4, use_pulseio=False)
+    self.last_update_time = None
 
     try:
       f = open("status.json", "r")
@@ -87,15 +91,17 @@ class Controller:
     try:
       self.status.humidity = self.get_humidity()
       self.status.temp = self.get_temperature()
-      temp_diff = self.status.temp - self.status.target_temp
-      if (temp_diff <= -2):
-        self.furnace_on()
-      elif temp_diff >= 5:
-        self.fan_hi_on()
-      elif temp_diff >= 2:
-        self.fan_low_on()
-      else:
-        self.all_off()
+      if (self.last_update_time == None or time.time() - self.last_update_time >= CYCLE_TIME):
+        temp_diff = self.status.temp - self.status.target_temp
+        if (temp_diff <= -2):
+          self.furnace_on()
+        elif temp_diff >= 5:
+          self.fan_hi_on()
+        elif temp_diff >= 2:
+          self.fan_low_on()
+        else:
+          self.all_off()
+        self.last_update_time = time.time()
       self.write_status()
     except Exception as e:
       log.critical(e)
