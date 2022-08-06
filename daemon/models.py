@@ -2,8 +2,8 @@ from pydantic import BaseModel
 
 class Pins(BaseModel):
   pump: bool
-  fan_on: bool
-  fan_speed: bool
+  fan_low: bool
+  fan_high: bool
   furnace: bool
 
 
