@@ -38,31 +38,40 @@ function setTemperature() {
 function processStatus(status) {
   document.getElementById("temperature").innerHTML = status["temp"]
   document.getElementById("set-temperature").innerHTML = status["target_temp"]
+  document.getElementById("humidity").innerHTML = status["humidity"]
 
   let coolerStatus = null
   let furnaceStatus = null
   let pinsStatus = status["pins"]
 
-  if (pinsStatus["fan_on"] == true) {
-    if (pinsStatus["pump"] == true) {
-      coolerStatus = "Cooling"
+  if (status["usable"]["cooler"])  {
+    if (pinsStatus["fan_on"] == true) {
+      if (pinsStatus["pump"] == true) {
+        coolerStatus = "Cooling"
+      } else {
+        coolerStatus = "Fan"
+      }
+      if (pinsStatus["fan_speed"] == true) {
+        coolerStatus += " High"
+      } else {
+        coolerStatus += " Low"
+      }
     } else {
-      coolerStatus = "Fan"
-    }
-    if (pinsStatus["fan_speed"] == true) {
-      coolerStatus += " High"
-    } else {
-      coolerStatus += " Low"
+      coolerStatus = "Off"
     }
   } else {
-    coolerStatus = "Off"
+    coolerStatus = "Disabled"
   }
   document.getElementById("cooler-status").innerHTML = coolerStatus
 
-  if (pinsStatus["furnace"] == true) {
-    furnaceStatus = "On"
+  if (status["usable"]["furnace"]) {
+    if (pinsStatus["furnace"] == true) {
+      furnaceStatus = "On"
+    } else {
+      furnaceStatus = "Off"
+    }
   } else {
-    furnaceStatus = "Off"
+    furnaceStatus = "Disabled"
   }
 
   document.getElementById("furnace-status").innerHTML = furnaceStatus
