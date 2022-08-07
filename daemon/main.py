@@ -49,3 +49,9 @@ async def set_usable(cooler: bool, furnace: bool):
   controller.set_usable(cooler, furnace)
   return "Success"
 
+@app.put("/manual_override")
+async def manual_override(override: bool, pins: models.Pins):
+  print(override, pins)
+  controller.set_manual_override(override, pins)
+  return "Success"
+
