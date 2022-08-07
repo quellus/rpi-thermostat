@@ -2,8 +2,8 @@ from pydantic import BaseModel
 
 class Pins(BaseModel):
   pump: bool
-  fan_on: bool
-  fan_speed: bool
+  fan_low: bool
+  fan_high: bool
   furnace: bool
 
 
@@ -18,6 +18,7 @@ class Status(BaseModel):
   target_temp: int
   temp: float
   humidity: int
+  manual_override: bool
 
 
 class StatusObject(BaseModel):
