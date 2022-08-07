@@ -18,6 +18,7 @@ class Status(BaseModel):
   target_temp: int
   temp: float
   humidity: int
+  manual_override: bool
 
 
 class StatusObject(BaseModel):

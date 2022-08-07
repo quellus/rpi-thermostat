@@ -38,15 +38,13 @@ class Controller:
     self._dht = adafruit_dht.DHT22(board.D4, use_pulseio=False)
     self.last_update_time = None
 
-    self.manual_override = False
-
     try:
       f = open("status.json", "r")
       self.status = models.Status.parse_raw(f.read())
     except Exception:
       pins = models.Pins(pump = False, fan_low = False, fan_high = False, furnace = False)
       usable = models.Usable(cooler = True, furnace = True)
-      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temp = 72, humidity = 30)
+      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temp = 72, humidity = 30, manual_override = False)
 
 
   def get_status(self):
@@ -88,8 +86,9 @@ class Controller:
     usable = models.Usable(cooler = cooler, furnace = furnace)
     self.status.usable = usable
 
+
   def set_manual_override(self, override: bool, pins: models.Pins):
-    self.manual_override = override
+    self.status.manual_override = override
     self.set_pins(pins.pump, pins.fan_low, pins.fan_high, pins.furnace)
 
 
@@ -97,7 +96,7 @@ class Controller:
     try:
       self.status.humidity = self.get_humidity()
       self.status.temp = self.get_temperature()
-      if (not self.manual_override):
+      if (not self.status.manual_override):
         if (self.last_update_time == None or time.time() - self.last_update_time >= CYCLE_TIME):
           temp_diff = self.status.temp - self.status.target_temp
           if (temp_diff <= -2):
