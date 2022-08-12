@@ -2,7 +2,7 @@ var xhr = new XMLHttpRequest()
 xhr.responseType=''
 
 var restURL = "http://" + window.location.host + ":8000/"
-var heartbeat = setInterval(getStatus, 5000)
+var heartbeat = setInterval(getStatus, 2000)
 getStatus()
 
 function getStatus() {
@@ -45,19 +45,17 @@ function processStatus(status) {
   let pinsStatus = status["pins"]
 
   if (status["usable"]["cooler"])  {
-    if (pinsStatus["fan_on"] == true) {
-      if (pinsStatus["pump"] == true) {
-        coolerStatus = "Cooling"
-      } else {
-        coolerStatus = "Fan"
-      }
-      if (pinsStatus["fan_speed"] == true) {
-        coolerStatus += " High"
-      } else {
-        coolerStatus += " Low"
-      }
+    if (pinsStatus["pump"] == true) {
+      coolerStatus = "Pump on <br>"
     } else {
-      coolerStatus = "Off"
+      coolerStatus = "Pump off <br>"
+    }
+    if (pinsStatus["fan_low"] == true) {
+      coolerStatus += "Fan low"
+    } else if (pinsStatus["fan_high"] == true) {
+      coolerStatus += "Fan high"
+    } else {
+      coolerStatus = "Fan off"
     }
   } else {
     coolerStatus = "Disabled"
@@ -76,6 +74,5 @@ function processStatus(status) {
 
   document.getElementById("furnace-status").innerHTML = furnaceStatus
 
-
-
 }
+
