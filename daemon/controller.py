@@ -101,10 +101,10 @@ class Controller:
           temp_diff = self.status.temp - self.status.target_temp
           if (temp_diff <= -2):
             self.furnace_on()
-          elif temp_diff >= 2:
+          elif temp_diff >= 5:
             self.fan_hi_on()
-          #elif temp_diff >= 2:
-          #  self.fan_low_on()
+          elif temp_diff >= 2:
+            self.fan_low_on()
           else:
             self.all_off()
           self.last_update_time = time.time()
