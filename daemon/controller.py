@@ -4,6 +4,8 @@ import RPi.GPIO as GPIO
 import models
 import logging
 import time
+import requests
+import json
 from systemd.journal import JournalHandler
 
 log = logging.getLogger("thermostat")
@@ -26,6 +28,7 @@ ON = GPIO.LOW
 OFF = GPIO.HIGH
 
 CYCLE_TIME = 2 * 60 # minutes converted to seconds
+TEMPERATURE_STALE = 5 * 60 # minutes converted to seconds
 
 class Controller:
   def __init__(self):
@@ -44,14 +47,18 @@ class Controller:
     except Exception:
       pins = models.Pins(pump = False, fan_low = False, fan_high = False, furnace = False)
       usable = models.Usable(cooler = True, furnace = True)
-      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temp = 72, humidity = 30, manual_override = False)
-
+      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temperatures = {"closet": models.Temperature(temperature = "72", timestamp = time.time())}, humidity = 30, manual_override = False)
 
   def get_status(self):
     return self.status
 
 
-  def get_temperature(self):
+  def update_status_temperatures(self):
+    self.status.temperatures["closet"] = models.Temperature(temperature = self.get_sensor_temperature(), timestamp = time.time())
+    self.status.temperatures.update(self.get_api_temperatures())
+
+
+  def get_sensor_temperature(self):
     try:
       temperature_c = self._dht.temperature
       temperature_f = temperature_c * (9 / 5) + 32
@@ -61,7 +68,16 @@ class Controller:
     except RuntimeError as e:
       log.error("Temperature didn't read, trying again")
       print("Temperature didn't read, trying again")
-      return self.get_temperature()
+      return self.get_sensor_temperature()
+
+
+  def get_api_temperatures(self):
+    temperatures = {}
+    response = requests.get("http://192.168.1.202/apps/api/5/devices/all?access_token=db072f4d-c588-43ad-ad81-e138fca5d930")
+    if response.status_code == 200:
+      for sensor in json.loads(response.text):
+        temperatures[sensor["label"]] = models.Temperature(temperature = sensor["attributes"]["temperature"], timestamp = time.time())
+    return temperatures
 
 
   def get_humidity(self):
@@ -75,7 +91,20 @@ class Controller:
       print("Humidity didn't read, trying again")
       return self.get_humidity()
 
-  
+
+  def calc_average_temperature(self):
+    avg = 0
+    num_temps = 0
+    for name in self.status.temperatures:
+      if time.time() - self.status.temperatures[name].timestamp <= TEMPERATURE_STALE:
+        avg += self.status.temperatures[name].temperature
+        num_temps += 1
+    if num_temps != 0:
+      return avg / num_temps
+    else:
+      return None
+
+ 
   def set_target_temp(self, temp: int):
     log.info("target temp set to {}".format(temp))
     print("target temp set to {}".format(temp))
@@ -95,10 +124,13 @@ class Controller:
   def drive_status(self):
     try:
       self.status.humidity = self.get_humidity()
-      self.status.temp = self.get_temperature()
+      self.update_status_temperatures()
       if (not self.status.manual_override):
+        avg_temp = self.calc_average_temperature()
+        log.info("average temperature = {}".format(avg_temp))
+        print("average temperature = {}".format(avg_temp))
         if (self.last_update_time == None or time.time() - self.last_update_time >= CYCLE_TIME):
-          temp_diff = self.status.temp - self.status.target_temp
+          temp_diff = self.calc_average_temperature() - self.status.target_temp
           if (temp_diff <= -2):
             self.furnace_on()
           elif temp_diff >= 5:

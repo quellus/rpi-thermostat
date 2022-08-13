@@ -12,11 +12,16 @@ class Usable(BaseModel):
   furnace: bool
 
 
+class Temperature(BaseModel):
+  temperature: float
+  timestamp: float
+
+
 class Status(BaseModel):
   pins: Pins
   usable: Usable
   target_temp: int
-  temp: float
+  temperatures: dict[str, Temperature]
   humidity: int
   manual_override: bool
 

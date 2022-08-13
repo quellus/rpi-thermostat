@@ -33,11 +33,6 @@ async def root() -> dict:
   return models.StatusObject(status = controller.get_status())
 
 
-@app.get("/temperature")
-async def get_temperature() -> float:
-  return controller.get_temperature()
-
-
 @app.put("/target_temperature")
 async def set_target_temp(temperature: int) -> str:
   controller.set_target_temp(temperature)
