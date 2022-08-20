@@ -47,14 +47,14 @@ class Controller:
     except Exception:
       pins = models.Pins(pump = False, fan_low = False, fan_high = False, furnace = False)
       usable = models.Usable(cooler = True, furnace = True)
-      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temperatures = {"closet": models.Temperature(temperature = "72", timestamp = time.time())}, humidity = 30, manual_override = False)
+      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temperatures = {"Closet": models.Temperature(temperature = "72", timestamp = time.time())}, humidity = 30, manual_override = False)
 
   def get_status(self):
     return self.status
 
 
   def update_status_temperatures(self):
-    self.status.temperatures["closet"] = models.Temperature(temperature = self.get_sensor_temperature(), timestamp = time.time())
+    self.status.temperatures["Closet"] = models.Temperature(temperature = self.get_sensor_temperature(), timestamp = time.time())
     self.status.temperatures.update(self.get_api_temperatures())
 
 

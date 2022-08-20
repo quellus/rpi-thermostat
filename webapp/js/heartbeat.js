@@ -36,14 +36,35 @@ function setTemperature() {
 }
 
 function processStatus(status) {
-  document.getElementById("temperature").innerHTML = status["temp"]
+  let temperatures = getTemperatures(status)
+  document.getElementById("temperature").innerHTML = temperatures
   document.getElementById("set-temperature").innerHTML = status["target_temp"]
   document.getElementById("humidity").innerHTML = status["humidity"]
+  let coolerStatus = getCoolerStatus(status)
+  document.getElementById("cooler-status").innerHTML = coolerStatus
+  let furnaceStatus = getFurnaceStatus(status)
+  document.getElementById("furnace-status").innerHTML = furnaceStatus
+}
 
-  let coolerStatus = null
-  let furnaceStatus = null
+function getTemperatures(status) {
+  let temperatures = status["temperatures"]
+  let tempString = ""
+  let sum = 0
+
+  for (name in temperatures) {
+    let temp = temperatures[name]["temperature"]
+    tempString += name + ": " + temp + "<br>"
+    sum += temp
+  }
+
+  tempString += "Average: " + sum / Object.keys(temperatures).length
+
+  return tempString
+}
+
+function getCoolerStatus(status) {
   let pinsStatus = status["pins"]
-
+  let coolerStatus = null
   if (status["usable"]["cooler"])  {
     if (pinsStatus["pump"] == true) {
       coolerStatus = "Pump on <br>"
@@ -55,13 +76,16 @@ function processStatus(status) {
     } else if (pinsStatus["fan_high"] == true) {
       coolerStatus += "Fan high"
     } else {
-      coolerStatus = "Fan off"
+      coolerStatus += "Fan off"
     }
   } else {
     coolerStatus = "Disabled"
   }
-  document.getElementById("cooler-status").innerHTML = coolerStatus
+  return coolerStatus
+}
 
+function getFurnaceStatus(status) {
+  let pinsStatus = status["pins"]
   if (status["usable"]["furnace"]) {
     if (pinsStatus["furnace"] == true) {
       furnaceStatus = "On"
@@ -71,8 +95,5 @@ function processStatus(status) {
   } else {
     furnaceStatus = "Disabled"
   }
-
-  document.getElementById("furnace-status").innerHTML = furnaceStatus
-
+  return furnaceStatus
 }
-
