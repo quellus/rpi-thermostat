@@ -50,10 +50,12 @@ function processStatus(status) {
     } else {
       coolerStatus = "Pump off <br>"
     }
-    if (pinsStatus["fan_low"] == true) {
-      coolerStatus += "Fan low"
-    } else if (pinsStatus["fan_high"] == true) {
-      coolerStatus += "Fan high"
+    if (pinsStatus["fan_on"] == true) {
+      if (pinsStatus["fan_speed"] == true) {
+        coolerStatus += "Fan high"
+      } else {
+        coolerStatus += "Fan low"
+      }
     } else {
       coolerStatus = "Fan off"
     }
