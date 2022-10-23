@@ -14,20 +14,25 @@
       <h2>Thermostat or whatever</h2>
       <div>
         <div class="card">
-        <p>Current temperature</p><p id="temperature">ERR</p>
+          <p>Current temperature</p><p id="temperature">ERR</p>
         </div>
         <div class="card">
-        <p>Set temperature</p><p id="set-temperature">ERR</p>
-        <input id="temperature-input" type="number"></input><button type="button" onclick="setTemperature()">Submit</button>
+          <p>Set temperature</p>
+          <p style="display:inline-block"  id="set-temperature">ERR</p>
+          <div style="display:inline-block">
+            <button class="temp-button" type="button" onclick="temperatureUp()">^</button>
+            <br>
+            <button class="temp-button" type="button" onclick="temperatureDown()">v</button>
+          </div>
         </div>
         <div class="card">
-        <p>Humidity</p><p id="humidity">ERR</p>
+          <p>Humidity</p><p id="humidity">ERR</p>
         </div>
         <div class="card">
-        <p>Cooler</p><p id="cooler-status">ERR</p>
+          <p>Cooler</p><p id="cooler-status">ERR</p>
         </div>
         <div class="card">
-        <p>Furnace</p><p id="furnace-status">ERR</p>
+          <p>Furnace</p><p id="furnace-status">ERR</p>
         </div>
       </div>
     </div>
