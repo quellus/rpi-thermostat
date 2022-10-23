@@ -24,8 +24,19 @@ function getStatus() {
   xhr.send()
 }
 
-function setTemperature() {
-  let input = document.getElementById("temperature-input").value
+function temperatureUp() {
+  let setTemp = ++document.getElementById("set-temperature").innerHTML
+  document.getElementById("set-temperature").innerHTML = setTemp
+  setTemperature(setTemp)
+}
+
+function temperatureDown() {
+  setTemp = --document.getElementById("set-temperature").innerHTML
+  document.getElementById("set-temperature").innerHTML = setTemp
+  setTemperature(setTemp)
+}
+
+function setTemperature(input) {
   if (!isNaN(input) && input >= 1 && input <= 100) {
     console.log(input)
     xhr.open("PUT", restURL + "target_temperature?temperature=" + input)

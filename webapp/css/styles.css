@@ -39,6 +39,11 @@ a {
   font-size: 30px;
 }
 
+.temp-button {
+  width: 30px;
+  height: 30px;
+}
+
 footer h4 {
     margin: 0;
     line-height: 50px;
