@@ -49,16 +49,16 @@ function setTemperature(input) {
 
 function processStatus(status) {
   let sensors = status["sensors"]
-  let html = "<tr><th>Sensor</th><th>Temperature</th><th>Humidity</th></tr>"
+  let sensorTable = "<tr><th>Sensor</th><th>Temperature</th><th>Humidity</th></tr>"
 
   for (let key in sensors) {
     let sensor = sensors[key]
-    html += "<tr><td>" + key + "</td><td>" + sensor["temperature"] + "</td><td>" + sensor["humidity"] + "</td></tr>"
+    sensorTable += "<tr><td>" + key + "</td><td>" + sensor["temperature"] + "</td><td>" + sensor["humidity"] + "</td></tr>"
   }
-  document.getElementById("sensors-table").innerHTML = html
+  sensorTable += "<tr><td>Average</td><td>" + status["average_temp"] + "</td></tr>"
+  document.getElementById("sensors-table").innerHTML = sensorTable
 
   document.getElementById("set-temperature").innerHTML = status["target_temp"]
-  document.getElementById("humidity").innerHTML = status["humidity"]
 
   let coolerStatus = null
   let furnaceStatus = null
