@@ -16,9 +16,10 @@ class Status(BaseModel):
   pins: Pins
   usable: Usable
   target_temp: int
-  temp: float
+  average_temp: float
   humidity: int
   manual_override: bool
+  sensors: dict[str, dict]
 
 
 class StatusObject(BaseModel):
