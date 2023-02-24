@@ -56,7 +56,7 @@ class Controller:
     for i in range(3):
       try:
         temperature_c = self._dht.temperature
-        if temperature:
+        if temperature_c:
           temperature_f = temperature_c * (9 / 5) + 32
           log.info("temperature: {}".format(temperature_f))
           print("temperature: {}".format(temperature_f))
