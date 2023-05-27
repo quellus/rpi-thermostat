@@ -113,7 +113,7 @@ class Controller:
 
   def drive_status(self):
     try:
-      self.update_local_sensor()
+      #self.update_local_sensor()
       self.remove_stale_sensors()
       self.status.average_temp = self.get_average_temp()
       if (not self.status.manual_override):
@@ -121,7 +121,7 @@ class Controller:
           temp_diff = self.status.average_temp - self.status.target_temp
           if (temp_diff <= -2):
             self.furnace_on()
-          elif temp_diff >= 5:
+          elif temp_diff >= 3:
             self.fan_hi_on()
           elif temp_diff >= 2:
             self.fan_low_on()
