@@ -14,7 +14,21 @@
       <h2>Thermostat or whatever</h2>
       <div>
         <div class="card">
-          <p>Current temperature</p><p id="temperature">ERR</p>
+          <!--<p>Current temperature</p><p id="temperature">ERR</p>-->
+          <p>Sensors</p>
+          <table id="sensors-table">
+            <tr>
+              <th>Sensor</th>
+              <th>Temperature</th>
+              <th>Humidity</th>
+            </tr>
+            <tr>
+              <td>ERR</td>
+              <td>ERR</td>
+              <td>ERR</td>
+            </tr>
+
+          </table>
         </div>
         <div class="card">
           <p>Set temperature</p>
@@ -24,9 +38,6 @@
             <br>
             <button class="temp-button" type="button" onclick="temperatureDown()">v</button>
           </div>
-        </div>
-        <div class="card">
-          <p>Humidity</p><p id="humidity">ERR</p>
         </div>
         <div class="card">
           <p>Cooler</p><p id="cooler-status">ERR</p>

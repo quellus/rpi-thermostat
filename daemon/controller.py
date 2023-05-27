@@ -26,6 +26,7 @@ ON = GPIO.LOW
 OFF = GPIO.HIGH
 
 CYCLE_TIME = 2 * 60 # minutes converted to seconds
+SENSOR_STALE_TIMEOUT = 1 * 60 # minutes converted to seconds
 
 class Controller:
   def __init__(self):
@@ -44,36 +45,42 @@ class Controller:
     except Exception:
       pins = models.Pins(pump = False, fan_on = False, fan_speed = False, furnace = False)
       usable = models.Usable(cooler = True, furnace = True)
-      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, temp = 72, humidity = 30, manual_override = False)
+      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, average_temp = 72, humidity = 30, manual_override = False, sensors = {})
 
 
   def get_status(self):
     return self.status
-
+  
 
   def get_temperature(self):
-    try:
-      temperature_c = self._dht.temperature
-      temperature_f = temperature_c * (9 / 5) + 32
-      log.info("temperature: {}".format(temperature_f))
-      print("temperature: {}".format(temperature_f))
-      return round(temperature_f, 3)
-    except RuntimeError as e:
-      log.error("Temperature didn't read, trying again")
-      print("Temperature didn't read, trying again")
-      return self.get_temperature()
+    for i in range(3):
+      try:
+        temperature_c = self._dht.temperature
+        if temperature_c:
+          temperature_f = temperature_c * (9 / 5) + 32
+          log.info("temperature: {}".format(temperature_f))
+          print("temperature: {}".format(temperature_f))
+          return round(temperature_f, 3)
+      except:
+        log.error("Temperature didn't read, trying again")
+        print("Temperature didn't read, trying again")
+        continue
+    return None
 
 
   def get_humidity(self):
-    try:
-      humidity = self._dht.humidity
-      log.info("humidity: {}".format(humidity))
-      print("humidity: {}".format(humidity))
-      return humidity
-    except RuntimeError as e:
-      log.error("Humidity didn't read, trying again")
-      print("Humidity didn't read, trying again")
-      return self.get_humidity()
+    for i in range(3):
+      try:
+        humidity = self._dht.humidity
+        if humidity:
+          log.info("humidity: {}".format(humidity))
+          print("humidity: {}".format(humidity))
+          return humidity
+      except:
+        log.error("Humidity didn't read, trying again")
+        print("Humidity didn't read, trying again")
+        continue
+    return None
 
   
   def set_target_temp(self, temp: int):
@@ -92,16 +99,29 @@ class Controller:
     self.set_pins(pins.pump, pins.fan_on, pins.fan_speed, pins.furnace)
 
 
+  def update_sensor_status(self, name: str, temp: float, humidity: float):
+    self.status.sensors[name] = {"humidity": humidity, "temperature": temp, "timestamp": time.time()}
+
+
+  def update_local_sensor(self):
+    temperature = self.get_temperature()
+    humidity = self.get_humidity()
+    log.info("{} {}".format(temperature, humidity))
+    if humidity and temperature:
+      self.status.sensors["Closet"] = {"humidity": humidity, "temperature": temperature, "timestamp": time.time()}
+
+
   def drive_status(self):
     try:
-      self.status.humidity = self.get_humidity()
-      self.status.temp = self.get_temperature()
+      #self.update_local_sensor()
+      self.remove_stale_sensors()
+      self.status.average_temp = self.get_average_temp()
       if (not self.status.manual_override):
         if (self.last_update_time == None or time.time() - self.last_update_time >= CYCLE_TIME):
-          temp_diff = self.status.temp - self.status.target_temp
+          temp_diff = self.status.average_temp - self.status.target_temp
           if (temp_diff <= -2):
             self.furnace_on()
-          elif temp_diff >= 5:
+          elif temp_diff >= 3:
             self.fan_hi_on()
           elif temp_diff >= 2:
             self.fan_low_on()
@@ -112,6 +132,24 @@ class Controller:
     except Exception as e:
       log.critical(e)
       print(e)
+
+
+  def remove_stale_sensors(self):
+    sensor_keys = self.status.sensors.keys()
+    sensors_to_remove = []
+    for key in sensor_keys:
+      if self.status.sensors[key]["timestamp"] + SENSOR_STALE_TIMEOUT <= time.time():
+        sensors_to_remove.append(key)
+    for key in sensors_to_remove:
+        self.status.sensors.pop(key)
+
+
+  def get_average_temp(self):
+    temp_sum = 0
+    sensor_keys = self.status.sensors.keys()
+    for key in sensor_keys:
+      temp_sum += self.status.sensors[key]["temperature"]
+    return temp_sum / len(sensor_keys)
 
 
   def fan_low_on(self):

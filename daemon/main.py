@@ -37,6 +37,10 @@ async def root() -> dict:
 async def get_temperature() -> float:
   return controller.get_temperature()
 
+@app.put("/sensor-status")
+async def update_sensor_status(name: str, temperature: float, humidity: float):
+  controller.update_sensor_status(name, temperature, humidity)
+  return "Success"
 
 @app.put("/target_temperature")
 async def set_target_temp(temperature: int) -> str:

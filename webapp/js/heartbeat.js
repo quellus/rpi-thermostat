@@ -14,6 +14,7 @@ function getStatus() {
       let status = jsonResp["status"]
 
       if (status) {
+        console.log(status)
         processStatus(status)
       }
    }
@@ -47,9 +48,17 @@ function setTemperature(input) {
 }
 
 function processStatus(status) {
-  document.getElementById("temperature").innerHTML = status["temp"]
+  let sensors = status["sensors"]
+  let sensorTable = "<tr><th>Sensor</th><th>Temperature</th><th>Humidity</th></tr>"
+
+  for (let key in sensors) {
+    let sensor = sensors[key]
+    sensorTable += "<tr><td>" + key + "</td><td>" + sensor["temperature"] + "</td><td>" + sensor["humidity"] + "</td></tr>"
+  }
+  sensorTable += "<tr><td>Average</td><td>" + status["average_temp"] + "</td></tr>"
+  document.getElementById("sensors-table").innerHTML = sensorTable
+
   document.getElementById("set-temperature").innerHTML = status["target_temp"]
-  document.getElementById("humidity").innerHTML = status["humidity"]
 
   let coolerStatus = null
   let furnaceStatus = null
