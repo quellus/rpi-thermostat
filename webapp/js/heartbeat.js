@@ -60,10 +60,21 @@ function processStatus(status) {
 
   document.getElementById("set-temperature").innerHTML = status["target_temp"]
 
-  let coolerStatus = null
-  let furnaceStatus = null
+  let acStatus = "" 
+  let coolerStatus = ""
+  let furnaceStatus = ""
   let pinsStatus = status["pins"]
 
+  if (status["usable"]["ac"])  {
+    if (pinsStatus["ac"] == true) {
+      acStatus = "On"
+    } else {
+      acStatus = "Off"
+    }
+  } else {
+    acStatus = "Disabled"
+  }
+  document.getElementById("ac-status").innerHTML = acStatus
   if (status["usable"]["cooler"])  {
     if (pinsStatus["pump"] == true) {
       coolerStatus = "Pump on <br>"
@@ -77,7 +88,7 @@ function processStatus(status) {
         coolerStatus += "Fan low"
       }
     } else {
-      coolerStatus = "Fan off"
+      coolerStatus += "Fan off"
     }
   } else {
     coolerStatus = "Disabled"
