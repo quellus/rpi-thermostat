@@ -89,8 +89,8 @@ class Controller:
     self.status.target_temp = temp
 
 
-  def set_usable(self, cooler: bool, furnace: bool):
-    usable = models.Usable(cooler = cooler, furnace = furnace)
+  def set_usable(self, ac: bool, cooler: bool, furnace: bool):
+    usable = models.Usable(ac = ac, cooler = cooler, furnace = furnace)
     self.status.usable = usable
 
 
