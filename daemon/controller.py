@@ -113,21 +113,45 @@ class Controller:
 
   def drive_status(self):
     try:
-      #self.update_local_sensor()
       self.remove_stale_sensors()
       self.status.average_temp = self.get_average_temp()
-      if (not self.status.manual_override):
+      if not self.status.manual_override:
         if (self.last_update_time == None or time.time() - self.last_update_time >= CYCLE_TIME):
           temp_diff = self.status.average_temp - self.status.target_temp
-          if (temp_diff <= -2):
-            self.furnace_on()
-          elif temp_diff >= 3:
-            self.ac_on()
-          elif temp_diff >= 2:
-            self.fan_low_on()
+          if self.status.pins.ac == True and self.status.usable.ac:
+            if temp_diff <= 1.5:
+              self.all_off()
+              self.last_update_time = time.time()
+            elif temp_diff <= 2.5:
+              self.fan_low_on()
+              self.last_update_time = time.time()
+            else:
+              self.ac_on()
+          elif self.status.pins.fan_on == True:
+            if temp_diff >= 3.5 and self.status.usable.ac:
+              self.ac_on()
+              self.last_update_time = time.time()
+            elif temp_diff <= 1.5:
+              self.all_off()
+              self.last_update_time = time.time()
+            else:
+              self.fan_low_on()
+          elif self.status.pins.furnace == True:
+            if temp_diff >= -1.5:
+              self.all_off()
+              self.last_update_time = time.time()
+            else:
+              self.furnace_on()
           else:
-            self.all_off()
-          self.last_update_time = time.time()
+            if temp_diff <= -2.5:
+              self.furnace_on()
+              self.last_update_time = time.time()
+            elif temp_diff >= 2.5:
+              self.fan_low_on()
+              self.last_update_time = time.time()
+            else:
+              self.all_off()
+
       self.write_status()
     except Exception as e:
       log.critical(e)
