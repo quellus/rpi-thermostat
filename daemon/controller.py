@@ -119,34 +119,34 @@ class Controller:
         if (self.last_update_time == None or time.time() - self.last_update_time >= CYCLE_TIME):
           temp_diff = self.status.average_temp - self.status.target_temp
           if self.status.pins.ac == True and self.status.usable.ac:
-            if temp_diff <= 1.5:
+            if temp_diff <= 1:
               self.all_off()
               self.last_update_time = time.time()
-            elif temp_diff <= 2.5:
+            elif temp_diff <= 2:
               self.fan_low_on()
               self.last_update_time = time.time()
             else:
               self.ac_on()
           elif self.status.pins.fan_on == True:
-            if temp_diff >= 3.5 and self.status.usable.ac:
+            if temp_diff >= 3 and self.status.usable.ac:
               self.ac_on()
               self.last_update_time = time.time()
-            elif temp_diff <= 1.5:
+            elif temp_diff <= 1:
               self.all_off()
               self.last_update_time = time.time()
             else:
               self.fan_low_on()
           elif self.status.pins.furnace == True:
-            if temp_diff >= -1.5:
+            if temp_diff >= -1:
               self.all_off()
               self.last_update_time = time.time()
             else:
               self.furnace_on()
           else:
-            if temp_diff <= -2.5:
+            if temp_diff <= -2:
               self.furnace_on()
               self.last_update_time = time.time()
-            elif temp_diff >= 2.5:
+            elif temp_diff >= 2:
               self.fan_low_on()
               self.last_update_time = time.time()
             else:
