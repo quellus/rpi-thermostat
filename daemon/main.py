@@ -49,8 +49,8 @@ async def set_target_temp(temperature: int) -> str:
 
 
 @app.put("/usable")
-async def set_usable(cooler: bool, furnace: bool):
-  controller.set_usable(cooler, furnace)
+async def set_usable(ac: bool, cooler: bool, furnace: bool):
+  controller.set_usable(ac, cooler, furnace)
   return "Success"
 
 @app.put("/manual_override")

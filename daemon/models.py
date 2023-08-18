@@ -3,11 +3,12 @@ from pydantic import BaseModel
 class Pins(BaseModel):
   pump: bool
   fan_on: bool
-  fan_speed: bool
+  ac: bool
   furnace: bool
 
 
 class Usable(BaseModel):
+  ac: bool
   cooler: bool
   furnace: bool
 

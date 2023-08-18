@@ -49,21 +49,32 @@ function setTemperature(input) {
 
 function processStatus(status) {
   let sensors = status["sensors"]
-  let sensorTable = "<tr><th>Sensor</th><th>Temperature</th><th>Humidity</th></tr>"
+  let sensorTable = ""
 
   for (let key in sensors) {
     let sensor = sensors[key]
     sensorTable += "<tr><td>" + key + "</td><td>" + sensor["temperature"] + "</td><td>" + sensor["humidity"] + "</td></tr>"
   }
-  sensorTable += "<tr><td>Average</td><td>" + status["average_temp"] + "</td></tr>"
+  document.getElementById("avg-temp").innerHTML = status["average_temp"]
   document.getElementById("sensors-table").innerHTML = sensorTable
 
   document.getElementById("set-temperature").innerHTML = status["target_temp"]
 
-  let coolerStatus = null
-  let furnaceStatus = null
+  let acStatus = "" 
+  let coolerStatus = ""
+  let furnaceStatus = ""
   let pinsStatus = status["pins"]
 
+  if (status["usable"]["ac"])  {
+    if (pinsStatus["ac"] == true) {
+      acStatus = "On"
+    } else {
+      acStatus = "Off"
+    }
+  } else {
+    acStatus = "Disabled"
+  }
+  document.getElementById("ac-status").innerHTML = acStatus
   if (status["usable"]["cooler"])  {
     if (pinsStatus["pump"] == true) {
       coolerStatus = "Pump on <br>"
@@ -77,7 +88,7 @@ function processStatus(status) {
         coolerStatus += "Fan low"
       }
     } else {
-      coolerStatus = "Fan off"
+      coolerStatus += "Fan off"
     }
   } else {
     coolerStatus = "Disabled"

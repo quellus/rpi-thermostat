@@ -12,13 +12,13 @@ log.setLevel(logging.INFO)
 
 PUMP_PIN = 5
 FAN_ON_PIN = 6
-FAN_SPEED_PIN = 12
+AC_PIN = 12
 FURNACE_PIN = 13
 
 PINS = {
   "pump": PUMP_PIN,
   "fan_on": FAN_ON_PIN,
-  "fan_speed": FAN_SPEED_PIN,
+  "ac": AC_PIN,
   "furnace": FURNACE_PIN
 }
 
@@ -33,7 +33,7 @@ class Controller:
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(PUMP_PIN, GPIO.OUT, initial=OFF)
     GPIO.setup(FAN_ON_PIN, GPIO.OUT, initial=OFF)
-    GPIO.setup(FAN_SPEED_PIN, GPIO.OUT, initial=OFF)
+    GPIO.setup(AC_PIN, GPIO.OUT, initial=OFF)
     GPIO.setup(FURNACE_PIN, GPIO.OUT, initial=OFF)
 
     self._dht = adafruit_dht.DHT22(board.D4, use_pulseio=False)
@@ -43,8 +43,8 @@ class Controller:
       f = open("status.json", "r")
       self.status = models.Status.parse_raw(f.read())
     except Exception:
-      pins = models.Pins(pump = False, fan_on = False, fan_speed = False, furnace = False)
-      usable = models.Usable(cooler = True, furnace = True)
+      pins = models.Pins(pump = False, fan_on = False, ac = False, furnace = False)
+      usable = models.Usable(ac = True, cooler = True, furnace = True)
       self.status = models.Status(pins = pins, usable = usable, target_temp = 72, average_temp = 72, humidity = 30, manual_override = False, sensors = {})
 
 
@@ -89,14 +89,14 @@ class Controller:
     self.status.target_temp = temp
 
 
-  def set_usable(self, cooler: bool, furnace: bool):
-    usable = models.Usable(cooler = cooler, furnace = furnace)
+  def set_usable(self, ac: bool, cooler: bool, furnace: bool):
+    usable = models.Usable(ac = ac, cooler = cooler, furnace = furnace)
     self.status.usable = usable
 
 
   def set_manual_override(self, override: bool, pins: models.Pins):
     self.status.manual_override = override
-    self.set_pins(pins.pump, pins.fan_on, pins.fan_speed, pins.furnace)
+    self.set_pins(pins.pump, pins.fan_on, pins.ac, pins.furnace)
 
 
   def update_sensor_status(self, name: str, temp: float, humidity: float):
@@ -113,21 +113,46 @@ class Controller:
 
   def drive_status(self):
     try:
-      #self.update_local_sensor()
       self.remove_stale_sensors()
       self.status.average_temp = self.get_average_temp()
-      if (not self.status.manual_override):
+      if not self.status.manual_override:
         if (self.last_update_time == None or time.time() - self.last_update_time >= CYCLE_TIME):
           temp_diff = self.status.average_temp - self.status.target_temp
-          if (temp_diff <= -2):
-            self.furnace_on()
-          elif temp_diff >= 3:
-            self.fan_hi_on()
-          elif temp_diff >= 2:
-            self.fan_low_on()
+          if self.status.pins.ac == True or self.status.pins.fan_on == True:
+            if self.status.usable.ac:
+              if temp_diff <= 1:
+                self.all_off()
+                self.last_update_time = time.time()
+              else:
+                self.ac_on()
+            elif self.status.usable.cooler:
+              if temp_diff <= 1:
+                self.all_off()
+                self.last_update_time = time.time()
+              else:
+                self.fan_low_on()
+            else:
+              self.all_off()
+          elif self.status.pins.furnace == True:
+            if temp_diff >= -1:
+              self.all_off()
+              self.last_update_time = time.time()
+            else:
+              self.furnace_on()
           else:
-            self.all_off()
-          self.last_update_time = time.time()
+            if temp_diff <= -2:
+              self.furnace_on()
+              self.last_update_time = time.time()
+            elif temp_diff >= 2:
+              if self.status.usable.ac:
+                self.ac_on()
+                self.last_update_time = time.time()
+              elif self.status.usable.cooler:
+                self.fan_low_on()
+                self.last_update_time = time.time()
+            else:
+              self.all_off()
+
       self.write_status()
     except Exception as e:
       log.critical(e)
@@ -161,11 +186,11 @@ class Controller:
       self.all_off()
 
 
-  def fan_hi_on(self):
-    log.info("Turning on cooler to high")
-    print("Turning on cooler to high")
-    if self.status.usable.cooler:
-      self.set_pins(True, True, True, False)
+  def ac_on(self):
+    log.info("Turning on ac")
+    print("Turning on ac")
+    if self.status.usable.ac:
+      self.set_pins(False, False, True, False)
     else:
       self.all_off()
 
@@ -185,24 +210,24 @@ class Controller:
     self.set_pins(False, False, False, False)
 
 
-  def set_pins(self, pump: bool, fan_on: bool, fan_speed: bool, furnace: bool):
-    pins_status = models.Pins(pump = pump, fan_on = fan_on, fan_speed = fan_speed, furnace = furnace)
+  def set_pins(self, pump: bool, fan_on: bool, ac: bool, furnace: bool):
+    pins_status = models.Pins(pump = pump, fan_on = fan_on, ac = ac, furnace = furnace)
     self.status.pins = pins_status
     pump_pin = OFF
     fan_on_pin = OFF
-    fan_speed_pin = OFF
+    ac_pin = OFF
     furnace_pin = OFF
     if pump:
       pump_pin = ON
     if fan_on:
       fan_on_pin = ON
-    if fan_speed:
-      fan_speed_pin = ON
+    if ac:
+      ac_pin = ON
     if furnace:
       furnace_pin = ON
     GPIO.output(PUMP_PIN, pump_pin)
     GPIO.output(FAN_ON_PIN, fan_on_pin)
-    GPIO.output(FAN_SPEED_PIN, fan_speed_pin)
+    GPIO.output(AC_PIN, ac_pin)
     GPIO.output(FURNACE_PIN, furnace_pin)
 
   def write_status(self):
