@@ -47,10 +47,10 @@
             <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm8.5 2.5a.5.5 0 0 0-1 0v5.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V4.5z"/>
           </svg>
         </button>
-
       </div>
       <div class="col">
         <h5 class="card-title">Status</h5>
+        <p class="text-danger" id="manual-override-indicator">Manual Override Enabled</p>
         <table class="table">
           <thead>
             <tr>
@@ -73,6 +73,96 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+    <p>
+      <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+        Settings
+      </button>
+    </p>
+    <div class="collapse" id="collapseExample">
+      <div class="container text-center">
+        <div class="row">
+          <div class="col">
+            <h5 class="card-title">Usable</h5>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">System</th>
+                  <th scope="col">Usable</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>AC</td>
+                  <td id="ac-usable">
+                    <input type="checkbox" class="btn-check" id="ac-usable-checkbtn" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="ac-usable-checkbtn"></label>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Cooler</td>
+                  <td id="cooler-usable">
+                    <input type="checkbox" class="btn-check" id="cooler-usable-checkbtn" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="cooler-usable-checkbtn"></label>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Furnace</td>
+                  <td id="furnace-usable">
+                    <input type="checkbox" class="btn-check" id="furnace-usable-checkbtn" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="furnace-usable-checkbtn"></label>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-primary" type="button" onclick="submitUsable()">Submit</button>
+          </div>
+          <div class="col">
+            <h5 class="card-title">Manual Override</h5>
+            <input type="checkbox" class="btn-check" id="override-checkbtn" autocomplete="off">
+            <label class="btn btn-outline-danger" for="override-checkbtn">Override</label>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Pin</th>
+                  <th scope="col">On</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Pump</td>
+                  <td id="pump-override">
+                    <input type="checkbox" class="btn-check" id="pump-override-checkbtn" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="pump-override-checkbtn"></label>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Fan On</td>
+                  <td id="cooler-override">
+                    <input type="checkbox" class="btn-check" id="fan-on-override-checkbtn" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="fan-on-override-checkbtn"></label>
+                  </td>
+                </tr>
+                <tr>
+                  <td>AC</td>
+                  <td id="ac-override">
+                    <input type="checkbox" class="btn-check" id="ac-override-checkbtn" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="ac-override-checkbtn"></label>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Furnace</td>
+                  <td id="furnace-override">
+                    <input type="checkbox" class="btn-check" id="furnace-override-checkbtn" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="furnace-override-checkbtn"></label>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-primary" type="button" onclick="submitManualOverride()">Submit</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
