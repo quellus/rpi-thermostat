@@ -37,6 +37,34 @@ function temperatureDown() {
   setTemperature(setTemp)
 }
 
+function submitUsable() {
+  let acUsable = document.getElementById("ac-usable-checkbtn").checked 
+  let coolerUsable = document.getElementById("cooler-usable-checkbtn").checked 
+  let furnaceUsable = document.getElementById("furnace-usable-checkbtn").checked 
+
+  xhr.open("PUT", restURL + "usable?ac=" + acUsable + "&cooler=" + coolerUsable + "&furnace=" + furnaceUsable)
+  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+  xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+  xhr.send()
+}
+
+function submitManualOverride() {
+  let override = document.getElementById("override-checkbtn").checked
+
+  let body = {
+    pump: document.getElementById("pump-override-checkbtn").checked,
+    fan_on: document.getElementById("fan-on-override-checkbtn").checked,
+    ac: document.getElementById("ac-override-checkbtn").checked,
+    furnace: document.getElementById("furnace-override-checkbtn").checked
+  }
+
+  xhr.open("PUT", restURL + "manual_override?override=" + override)
+  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+  xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+  xhr.setRequestHeader('Content-Type', 'application/json')
+  xhr.send(JSON.stringify(body))
+}
+
 function setTemperature(input) {
   if (!isNaN(input) && input >= 1 && input <= 100) {
     console.log(input)
@@ -64,6 +92,12 @@ function processStatus(status) {
   let coolerStatus = ""
   let furnaceStatus = ""
   let pinsStatus = status["pins"]
+
+  if (status["manual_override"]) {
+    document.getElementById("manual-override-indicator").style.visibility = "visible"; 
+  } else {
+    document.getElementById("manual-override-indicator").style.visibility = "hidden"; 
+  }
 
   if (status["usable"]["ac"])  {
     if (pinsStatus["ac"] == true) {

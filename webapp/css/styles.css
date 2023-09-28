@@ -3,6 +3,7 @@ body {
 }
 
 .col {
+  padding: 15px;
   border: 10px solid black;
   color: var(--bs-body-color);
   background-color: var(--bs-body-bg);
