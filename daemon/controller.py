@@ -27,6 +27,7 @@ OFF = GPIO.HIGH
 
 CYCLE_TIME = 2 * 60 # minutes converted to seconds
 SENSOR_STALE_TIMEOUT = 1 * 60 # minutes converted to seconds
+HISTORY_MAX_ENTRIES = 500
 
 class Controller:
   def __init__(self):
@@ -38,6 +39,7 @@ class Controller:
 
     self._dht = adafruit_dht.DHT22(board.D4, use_pulseio=False)
     self.last_update_time = None
+    self.history = []
 
     try:
       f = open("status.json", "r")
@@ -51,6 +53,10 @@ class Controller:
   def get_status(self):
     return self.status
   
+
+  def get_history(self):
+    return self.history
+
 
   def get_temperature(self):
     for i in range(3):
@@ -157,6 +163,17 @@ class Controller:
     except Exception as e:
       log.critical(e)
       print(e)
+
+
+  def update_history(self):
+    log.info("Updating history " + str(self.status.average_temp))
+    print("Updating history " + str(self.status.average_temp))
+    time_obj = time.localtime()
+    time_asc = time.asctime(time_obj)
+    self.history.append((time_asc, self.status.average_temp))
+    if len(self.history) > HISTORY_MAX_ENTRIES:
+      to_remove = len(self.history) - HISTORY_MAX_ENTRIES
+      self.history = self.history[to_remove:]
 
 
   def remove_stale_sensors(self):

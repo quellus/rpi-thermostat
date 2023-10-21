@@ -28,6 +28,12 @@ async def drive_status():
   controller.drive_status()
 
 
+@app.on_event("startup")
+@repeat_every(seconds=120)
+async def drive_history():
+  controller.update_history()
+
+
 @app.get("/", response_model=models.StatusObject)
 async def root() -> dict:
   return models.StatusObject(status = controller.get_status())
@@ -36,6 +42,10 @@ async def root() -> dict:
 @app.get("/temperature")
 async def get_temperature() -> float:
   return controller.get_temperature()
+
+@app.get("/history")
+async def get_history() -> dict:
+  return models.HistoryObject(history = controller.get_history())
 
 @app.put("/sensor-status")
 async def update_sensor_status(name: str, temperature: float, humidity: float):
