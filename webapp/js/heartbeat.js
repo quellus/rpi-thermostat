@@ -3,23 +3,35 @@ xhr.responseType=''
 
 var restURL = "http://" + window.location.host + ":8000/"
 var heartbeat = setInterval(getStatus, 2000)
+var historyHeartBeat = setInterval(getHistory, 120000)
+var chart = undefined
 getStatus()
+getHistory()
 
 function getStatus() {
   xhr.onreadystatechange=(event)=>{
-  console.log(event)
-
     if(xhr.status==200 && xhr.readyState==4){
       jsonResp = JSON.parse(xhr.responseText)
       let status = jsonResp["status"]
+      let history = jsonResp["history"]
 
       if (status) {
         console.log(status)
         processStatus(status)
+      } else if (history) {
+        console.log(history)
+        processHistory(history)
       }
-   }
+     }
   }
   xhr.open("GET", restURL)
+  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+  xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+  xhr.send()
+}
+
+function getHistory() {
+  xhr.open("GET", restURL + "history")
   xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
   xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
   xhr.send()
@@ -141,5 +153,42 @@ function processStatus(status) {
 
   document.getElementById("furnace-status").innerHTML = furnaceStatus
 
+}
+
+function processHistory(history) {
+  const ctx = document.getElementById('history-graph');
+
+  graphx = []
+  graphy = []
+
+  history.forEach((item) => {
+    graphx.push(item[0])
+    graphy.push(item[1])
+  })
+
+  if (chart) {
+    chart.destroy()
+  }
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: graphx,
+      datasets: [{
+        data: graphy,
+        borderWidth: 1,
+        spanGaps: true
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+      }
+    }
+  })
 }
 

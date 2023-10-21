@@ -26,3 +26,6 @@ class Status(BaseModel):
 class StatusObject(BaseModel):
   status: Status
 
+
+class HistoryObject(BaseModel):
+  history: list 
