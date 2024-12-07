@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from controller import Controller
+import ssl
 import models
 
 app = FastAPI()
@@ -13,6 +14,9 @@ origins = [
   "*",
   "https://raspberrypi.local"
 ]
+
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+ssl_context.load_cert_chain('/home/pi/daemon-selfsigned.crt', keyfile='/home/pi/daemon-selfsigned.key')
 
 app.add_middleware(
   CORSMiddleware,
