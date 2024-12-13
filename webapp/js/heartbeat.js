@@ -93,9 +93,9 @@ function processStatus(status) {
 
   for (let key in sensors) {
     let sensor = sensors[key]
-    sensorTable += "<tr><td>" + key + "</td><td>" + sensor["temperature"] + "</td><td>" + sensor["humidity"] + "</td></tr>"
+    sensorTable += "<tr><td>" + key + "</td><td>" + parseFloat(sensor["temperature"].toFixed(2)) + "</td><td>" + parseFloat(sensor["humidity"].toFixed(2)) + "</td></tr>"
   }
-  document.getElementById("avg-temp").innerHTML = status["average_temp"]
+  document.getElementById("avg-temp").innerHTML = parseFloat(status["average_temp"].toFixed(2))
   document.getElementById("sensors-table").innerHTML = sensorTable
 
   document.getElementById("set-temperature").innerHTML = status["target_temp"]
