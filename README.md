@@ -24,9 +24,10 @@ The service will start on boot and automatically restart if anything goes wrong
 
 ### Arduino setup:
 
-1. Add and install [ESP8266](https://github.com/esp8266/Arduino)
-2. Install [DHT Sensor Library](https://github.com/adafruit/DHT-sensor-library) (in the Library Manager)
-3. Install [Adafruit AHTX0](https://github.com/adafruit/Adafruit_AHTX0) (in the Library Manager)
+1. Add and install [ESP8266](https://github.com/esp8266/Arduino).
+2. Install [DHT Sensor Library](https://github.com/adafruit/DHT-sensor-library) (in the Library Manager).
+3. Install [Adafruit AHTX0](https://github.com/adafruit/Adafruit_AHTX0) (in the Library Manager).
+4. Edit `Config.h`, enter the SSID and Password of the WiFi network and the IP and Port of the Thermostat server.
 
 ### Webapp setup:
 
