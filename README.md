@@ -17,6 +17,7 @@ adafruit-circuitpython-dht fastapi-restful uvicorn[standard]
 #### Production
 
 - Copy `thermostat.service` to `/etc/systemd/system`
+- Edit the file with appropriate user, group, paths to key and cert files, and working directory path
 - Run `sudo systemctl daemon-reload` or reboot
 - Run `sudo systemctl enable thermostat` to enable the service
 
