@@ -2,6 +2,8 @@
 
 A cooler and furnace controller run by a RaspberryPi with wireless arduino-based temperature sensors.
 
+![image](https://github.com/user-attachments/assets/b730898e-81bf-48fd-b9f2-f95659548468)
+
 ## About
 This project was created to solve two problems. The first being that I wanted to be able to control my evaporative cooler and furnace with a single thermostat, and I was unable to find a commercially available thermostat that could do that. The second problem is the wiring for the thermostats in my residence were installed too close to the vents. As a result, the thermostats' temperature readings were terribly inaccurate.
 
