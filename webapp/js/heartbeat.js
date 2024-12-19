@@ -1,7 +1,7 @@
 var xhr = new XMLHttpRequest()
 xhr.responseType=''
 
-var restURL = "http://" + window.location.host + ":8000/"
+var restURL = "//" + window.location.host + ":8000/"
 var heartbeat = setInterval(getStatus, 2000)
 var historyHeartBeat = setInterval(getHistory, 120000)
 var chart = undefined
