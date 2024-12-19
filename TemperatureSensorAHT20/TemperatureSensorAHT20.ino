@@ -40,7 +40,7 @@ void setup() {
   Serial.println();
   Serial.println();
 
-  WiFi.hostname(name + "-sensor");
+  WiFi.hostname(name + "-temp-sensor");
   WiFi.begin(STASSID, STAPSK);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -72,11 +72,13 @@ void loop() {
       Serial.println("F ");
       Serial.print("Humidity ");
       Serial.println(h);
-      WiFiClient client;
+      WiFiClientSecure client;
       HTTPClient http;
 
+      client.setInsecure();
+
       Serial.print("[HTTP] begin...\n");
-      http.begin(client, "http://" SERVER_IP "/sensor-status?name=" + name + "&temperature=" + String(tf) + "&humidity=" + String(h));  // HTTP
+      http.begin(client, "https://" SERVER_IP "/sensor-status?name=" + name + "&temperature=" + String(tf) + "&humidity=" + String(h));  // HTTP
       http.addHeader("Content-Type", "application/json");
 
       Serial.print("[HTTP] PUT...\n");
@@ -96,7 +98,7 @@ void loop() {
           Serial.println(">>");
         }
       } else {
-        Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        Serial.printf("[HTTP] PUT... failed, error: %s\n", http.errorToString(httpCode).c_str());
       }
 
       http.end();

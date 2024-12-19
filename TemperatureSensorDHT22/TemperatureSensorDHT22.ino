@@ -61,11 +61,13 @@ void loop() {
       Serial.println("F ");
       Serial.print("Humidity ");
       Serial.println(h);
-      WiFiClient client;
+      WiFiClientSecure client;
       HTTPClient http;
 
+      client.setInsecure();
+
       Serial.print("[HTTP] begin...\n");
-      http.begin(client, "http://" SERVER_IP "/sensor-status?name=" + name + "&temperature=" + String(tf) + "&humidity=" + String(h));  // HTTP
+      http.begin(client, "https://" SERVER_IP "/sensor-status?name=" + name + "&temperature=" + String(tf) + "&humidity=" + String(h));  // HTTP
       http.addHeader("Content-Type", "application/json");
 
       Serial.print("[HTTP] PUT...\n");
@@ -77,7 +79,6 @@ void loop() {
         // HTTP header has been send and Server response header has been handled
         Serial.printf("[HTTP] PUT... code: %d\n", httpCode);
 
-        // file found at server
         if (httpCode == HTTP_CODE_OK) {
           const String& payload = http.getString();
           Serial.println("received payload:\n<<");
@@ -85,12 +86,12 @@ void loop() {
           Serial.println(">>");
         }
       } else {
-        Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        Serial.printf("[HTTP] PUT... failed, error: %s\n", http.errorToString(httpCode).c_str());
       }
 
       http.end();
     }
   }
 
-  delay(10000);
+  delay(2000);
 }
