@@ -27,6 +27,11 @@ app.add_middleware(
 )
 
 @app.on_event("startup")
+async def startup():
+  await controller.connect_db()
+
+
+@app.on_event("startup")
 @repeat_every(seconds=10)
 async def drive_status():
   controller.drive_status()
@@ -35,7 +40,16 @@ async def drive_status():
 @app.on_event("startup")
 @repeat_every(seconds=120)
 async def drive_history():
-  controller.update_history()
+  await controller.update_db()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    """
+    Close the connection to the database
+    """
+    if controller.db_connection:
+      await controller.db_connection.close()
 
 
 @app.get("/", response_model=models.StatusObject)
