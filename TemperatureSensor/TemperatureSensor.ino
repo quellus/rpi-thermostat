@@ -7,27 +7,30 @@
 #include <Esp.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include "Config.h"
+
+// DHT22 sensor
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 
-#define SERVER_IP "ip:port"
-#define DHTPIN 14     // Digital pin connected to the DHT sensor 
-#define DHTTYPE    DHT22     // DHT 22 (AM2302)
-
-#ifndef STASSID
-#define STASSID "WIFINetwork"
-#define STAPSK "WIFIPassword"
-#endif
+// AHT20 sensor
+#include <Adafruit_AHTX0.h>
 
 String name = "Name";
 
+Adafruit_AHTX0 aht;
 DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
   // ESP.wdtEnable(0);
   Serial.begin(115200);
 
-  dht.begin();
+  if (!SENSOR_TYPE) {
+    dht.begin();
+  } else if (! aht.begin()) {
+    Serial.println("Could not find AHT Sensor. Check wiring");
+    while (1) delay(10);
+  }
 
   Serial.println();
   Serial.println();
@@ -49,11 +52,20 @@ void loop() {
   // wait for WiFi connection
   if ((WiFi.status() == WL_CONNECTED)) {
     //read temperature and humidity
-    float t = dht.readTemperature();
-    float h = dht.readHumidity();
+
+    sensors_event_t humidity, temp;
+    float t, h;
+    if (SENSOR_TYPE) {
+      aht.getEvent(&humidity, &temp);// populate temp and humidity objects with fresh data
+      t = temp.temperature;
+      h = temp.relative_humidity;
+    } else {
+      t = dht.readTemperature();
+      h = dht.readHumidity();
+    }
 
     if (isnan(h) || isnan(t)) {
-      Serial.println("Failed to read from DHT sensor!");
+      Serial.println("Failed to read from sensor!");
     } else {
       float tf = (t * 1.8) + 32; // convert from celcius to fahrenheit
       Serial.print("Temperature ");
