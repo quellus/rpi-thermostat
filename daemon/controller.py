@@ -2,16 +2,7 @@ import adafruit_dht
 import board
 import RPi.GPIO as GPIO
 import models
-import logging
 import time
-import asyncio
-from systemd.journal import JournalHandler
-
-import dotenv
-
-log = logging.getLogger("thermostat")
-log.addHandler(JournalHandler())
-log.setLevel(logging.INFO)
 
 PUMP_PIN = 5
 FAN_ON_PIN = 6
@@ -33,7 +24,7 @@ SENSOR_STALE_TIMEOUT = 1 * 60 # minutes converted to seconds
 HISTORY_MAX_ENTRIES = 500
 
 class Controller:
-  def __init__(self):
+  def __init__(self, log):
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(PUMP_PIN, GPIO.OUT, initial=OFF)
     GPIO.setup(FAN_ON_PIN, GPIO.OUT, initial=OFF)
@@ -43,6 +34,7 @@ class Controller:
     self._dht = adafruit_dht.DHT22(board.D4, use_pulseio=False)
     self.last_update_time = None
     self.history = []
+    self.log = log
     
     try:
       f = open("status.json", "r")
@@ -67,11 +59,11 @@ class Controller:
         temperature_c = self._dht.temperature
         if temperature_c:
           temperature_f = temperature_c * (9 / 5) + 32
-          log.info("temperature: {}".format(temperature_f))
+          self.log.info("temperature: {}".format(temperature_f))
           print("temperature: {}".format(temperature_f))
           return round(temperature_f, 3)
       except:
-        log.error("Temperature didn't read, trying again")
+        self.log.error("Temperature didn't read, trying again")
         print("Temperature didn't read, trying again")
         continue
     return None
@@ -82,18 +74,18 @@ class Controller:
       try:
         humidity = self._dht.humidity
         if humidity:
-          log.info("humidity: {}".format(humidity))
+          self.log.info("humidity: {}".format(humidity))
           print("humidity: {}".format(humidity))
           return humidity
       except:
-        log.error("Humidity didn't read, trying again")
+        self.log.error("Humidity didn't read, trying again")
         print("Humidity didn't read, trying again")
         continue
     return None
 
   
   def set_target_temp(self, temp: int):
-    log.info("target temp set to {}".format(temp))
+    self.log.info("target temp set to {}".format(temp))
     print("target temp set to {}".format(temp))
     self.status.target_temp = temp
 
@@ -115,7 +107,7 @@ class Controller:
   def update_local_sensor(self):
     temperature = self.get_temperature()
     humidity = self.get_humidity()
-    log.info("{} {}".format(temperature, humidity))
+    self.log.info("{} {}".format(temperature, humidity))
     if humidity and temperature:
       self.status.sensors["Closet"] = {"humidity": humidity, "temperature": temperature, "timestamp": time.time()}
 
@@ -164,12 +156,12 @@ class Controller:
       
       self.write_status()
     except Exception as e:
-      log.critical(e)
+      self.log.critical(e)
       print(e)
 
 
   def update_history(self):
-    log.info("Updating history " + str(self.status.average_temp))
+    self.log.info("Updating history " + str(self.status.average_temp))
     print("Updating history " + str(self.status.average_temp))
     time_obj = time.localtime()
     time_asc = time.asctime(time_obj)
@@ -198,7 +190,7 @@ class Controller:
 
 
   def fan_low_on(self):
-    log.info("Turning on cooler to low")
+    self.log.info("Turning on cooler to low")
     print("Turning on cooler to low")
     if self.status.usable.cooler:
       self.set_pins(True, True, False, False)
@@ -207,7 +199,7 @@ class Controller:
 
 
   def ac_on(self):
-    log.info("Turning on ac")
+    self.log.info("Turning on ac")
     print("Turning on ac")
     if self.status.usable.ac:
       self.set_pins(False, False, True, False)
@@ -216,7 +208,7 @@ class Controller:
 
 
   def furnace_on(self):
-    log.info("Turning on furnace")
+    self.log.info("Turning on furnace")
     print("Turning on furnace")
     if self.status.usable.furnace:
       self.set_pins(False, False, False, True)
@@ -225,7 +217,7 @@ class Controller:
 
 
   def all_off(self):
-    log.info("Turning cooler and furnace off")
+    self.log.info("Turning cooler and furnace off")
     print("Turning cooler and furnace off")
     self.set_pins(False, False, False, False)
 

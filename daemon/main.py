@@ -1,16 +1,21 @@
-from fastapi import FastAPI, Response, status
+from fastapi import FastAPI
 from fastapi_restful.tasks import repeat_every
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
 from controller import Controller
 from database import Database
 import ssl
 import models
+import logging
+from systemd.journal import JournalHandler
+
+log = logging.getLogger("thermostat")
+log.addHandler(JournalHandler())
+log.setLevel(logging.INFO)
 
 app = FastAPI()
-database = Database()
-controller = Controller()
+database = Database(log)
+controller = Controller(log)
 
 origins = [
   "*",
