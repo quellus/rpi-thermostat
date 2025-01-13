@@ -4,10 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from controller import Controller
+from database import Database
 import ssl
 import models
 
 app = FastAPI()
+database = Database()
 controller = Controller()
 
 origins = [
@@ -28,19 +30,22 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-  await controller.connect_db()
+  await database.connect_db()
 
 
 @app.on_event("startup")
 @repeat_every(seconds=10)
 async def drive_status():
   controller.drive_status()
+  await database.update_averages(controller.status.average_temp, controller.status.target_temp)
+  await database.update_pins(controller.status.pins, controller.status.usable)
+
 
 
 @app.on_event("startup")
 @repeat_every(seconds=120)
 async def drive_history():
-  await controller.update_db()
+  await database.update_db()
 
 
 @app.on_event("shutdown")
@@ -48,8 +53,7 @@ async def shutdown():
     """
     Close the connection to the database
     """
-    if controller.db_connection:
-      await controller.db_connection.close()
+    database.disconnect_db()
 
 
 @app.get("/", response_model=models.StatusObject)
@@ -68,6 +72,8 @@ async def get_history() -> dict:
 @app.put("/sensor-status")
 async def update_sensor_status(name: str, temperature: float, humidity: float):
   controller.update_sensor_status(name, temperature, humidity)
+  await database.update_sensors(name, temperature, humidity)
+
   return "Success"
 
 @app.put("/target_temperature")

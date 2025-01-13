@@ -2,4 +2,5 @@ adafruit-circuitpython-dht
 fastapi-restful
 uvicorn[standard]
 python-dotenv
+asyncio
 asyncpg

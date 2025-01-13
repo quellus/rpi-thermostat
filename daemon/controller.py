@@ -4,13 +4,10 @@ import RPi.GPIO as GPIO
 import models
 import logging
 import time
+import asyncio
 from systemd.journal import JournalHandler
 
-import os
-import asyncpg
 import dotenv
-
-from datetime import datetime, timezone
 
 log = logging.getLogger("thermostat")
 log.addHandler(JournalHandler())
@@ -46,15 +43,14 @@ class Controller:
     self._dht = adafruit_dht.DHT22(board.D4, use_pulseio=False)
     self.last_update_time = None
     self.history = []
-    self.db_connection = None
-    dotenv.load_dotenv()
+    
     try:
       f = open("status.json", "r")
       self.status = models.Status.parse_raw(f.read())
     except Exception:
       pins = models.Pins(pump = False, fan_on = False, ac = False, furnace = False)
       usable = models.Usable(ac = True, cooler = True, furnace = True)
-      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, average_temp = 72, humidity = 30, manual_override = False, sensors = {})
+      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, average_temp = 72, manual_override = False, sensors = {})
 
 
   def get_status(self):
@@ -165,7 +161,7 @@ class Controller:
                 self.last_update_time = time.time()
             else:
               self.all_off()
-
+      
       self.write_status()
     except Exception as e:
       log.critical(e)
@@ -181,32 +177,6 @@ class Controller:
     if len(self.history) > HISTORY_MAX_ENTRIES:
       to_remove = len(self.history) - HISTORY_MAX_ENTRIES
       self.history = self.history[to_remove:]
-
-
-  async def update_db(self):
-    log.info("Sending avg temp to database")
-    print("Sending avg temp to database")
-    try:
-      dt = datetime.now()
-
-      sql_com = "INSERT INTO temperatures VALUES (TIMESTAMP '" + str(dt) + "', " + str(self.status.average_temp) + ")"
-      await self.db_connection.execute(
-          sql_com
-      )
-    except Exception as e:
-      log.error("Database query failed with:\n" + e)
-      print("Database query failed with:")
-      print(e)
-
-
-  async def connect_db(self):
-    try:
-      self.db_connection = await asyncpg.connect(user=os.getenv("DB_USER"), password=os.getenv("DB_PASSWORD"),
-          database=os.getenv("DB_DATABASE"), host=os.getenv("DB_HOST"))
-    except Exception as e:
-      log.error("Database connection failed with:\n" + e)
-      print("Database connection failed with:")
-      print(e)
 
 
   def remove_stale_sensors(self):
