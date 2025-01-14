@@ -1,26 +1,23 @@
 from datetime import datetime
 import asyncpg
-import os
-import dotenv
+
 
 class Database:
   def __init__(self, log):
     self.db_connection = None
     self.log = log
-    dotenv.load_dotenv()
 
 
-  async def connect_db(self):
+  async def connect_db(self, user: str, password: str, database: str, host: str):
     self.log.info("Connecting to database")
     print("Connecting to database")
     try:
-      dotenv.load_dotenv()
-      self.db_connection = await asyncpg.connect(user=os.getenv("DB_USER"), password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_DATABASE"), host=os.getenv("DB_HOST"))
+      self.db_connection = await asyncpg.connect(user=user, password=password,
+        database=database, host=host)
     except Exception as e:
-      self.log.error("Database connection failed with:\n" + e)
+      self.log.error("Database connection failed with:\n" + str(e))
       print("Database connection failed with:")
-      print(e)
+      print(str(e))
     else:
       self.log.error("Database connection successful")
       print("Database connection successful")
@@ -45,9 +42,9 @@ class Database:
         dt, name, temperature, humidity
       )
     except Exception as e:
-      self.log.error("Database query failed with:\n" + e)
+      self.log.error("Database query failed with:\n" + str(e))
       print("Database query failed with:")
-      print(e)
+      print(str(e))
 
 
   async def update_averages(self, avg_temp, target_temp):
@@ -62,9 +59,9 @@ class Database:
         dt, avg_temp, target_temp
       )
     except Exception as e:
-      self.log.error("Database query failed with:\n" + e)
+      self.log.error("Database query failed with:\n" + str(e))
       print("Database query failed with:")
-      print(e)
+      print(str(e))
 
 
   async def update_pins(self, pins, usable):
@@ -83,6 +80,6 @@ class Database:
         usable.cooler, pins.fan_on
       )
     except Exception as e:
-      self.log.error("Database query failed with:\n" + e)
+      self.log.error("Database query failed with:\n" + str(e))
       print("Database query failed with:")
-      print(e)
+      print(str(e))

@@ -40,6 +40,8 @@ class Controller:
       f = open("status.json", "r")
       self.status = models.Status.parse_raw(f.read())
     except Exception:
+      self.log.info("No status file found. Using default values.")
+      print("No status file found. Using default values.")
       pins = models.Pins(pump = False, fan_on = False, ac = False, furnace = False)
       usable = models.Usable(ac = True, cooler = True, furnace = True)
       self.status = models.Status(pins = pins, usable = usable, target_temp = 72, average_temp = 72, manual_override = False, sensors = {})
@@ -156,8 +158,8 @@ class Controller:
       
       self.write_status()
     except Exception as e:
-      self.log.critical(e)
-      print(e)
+      self.log.critical(str(e))
+      print(str(e))
 
 
   def update_history(self):
