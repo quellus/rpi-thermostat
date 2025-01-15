@@ -63,7 +63,7 @@ async def drive_status():
 @app.on_event("startup")
 @repeat_every(seconds=120)
 async def drive_history():
-  await database.update_db()
+  controller.update_history()
 
 
 @app.on_event("shutdown")
