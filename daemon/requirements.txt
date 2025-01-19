@@ -1,3 +1,5 @@
 adafruit-circuitpython-dht
-fastapi-restful
-uvicorn[standard]
+fastapi[standard]
+fastapi-utils
+typing_inspect
+systemd-python

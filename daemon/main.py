@@ -1,22 +1,51 @@
 from fastapi import FastAPI, Response, status
-from fastapi_restful.tasks import repeat_every
+from fastapi_utils.tasks import repeat_every
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
+import asyncio
 
 from controller import Controller
 import ssl
 import models
 
-app = FastAPI()
+
+is_shutdown = False
 controller = Controller()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global is_shutdown
+    print("the lifespan is happening")
+    asyncio.create_task(drive_status_loop())
+    asyncio.create_task(drive_history_loop())
+    yield
+    print("post-yield")
+    is_shutdown = True
+
+app = FastAPI(lifespan=lifespan)
+
+async def drive_status_loop():
+  global is_shutdown
+  while (not is_shutdown):
+    print("Driving status loop")
+    drive_status()
+    await asyncio.sleep(10)
+
+async def drive_history_loop():
+  global is_shutdown
+  while (not is_shutdown):
+    print("Driving history loop")
+    controller.update_history()
+    await asyncio.sleep(10)
+
 
 origins = [
   "*",
   "https://raspberrypi.local"
 ]
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain('/home/pi/daemon-selfsigned.crt', keyfile='/home/pi/daemon-selfsigned.key')
+
 
 app.add_middleware(
   CORSMiddleware,
@@ -26,16 +55,12 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-@app.on_event("startup")
-@repeat_every(seconds=10)
-async def drive_status():
-  controller.drive_status()
 
-
-@app.on_event("startup")
-@repeat_every(seconds=120)
-async def drive_history():
-  controller.update_history()
+def drive_status():
+  try:
+    controller.drive_status()
+  except asyncio.CancelledError:
+    print("the exception accepted successfully")
 
 
 @app.get("/", response_model=models.StatusObject)
@@ -48,7 +73,7 @@ async def get_temperature() -> float:
   return controller.get_temperature()
 
 @app.get("/history")
-async def get_history() -> dict:
+async def get_history() -> models.HistoryObject:
   return models.HistoryObject(history = controller.get_history())
 
 @app.put("/sensor-status")

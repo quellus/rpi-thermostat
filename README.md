@@ -19,6 +19,7 @@ The thermostat gathers temperature data from multiple ESP8266 modules. The tempe
 
 ## Setup Instructions
 
+
 ### Arduino setup:
 
 1. Add and install [ESP8266](https://github.com/esp8266/Arduino).
@@ -30,10 +31,12 @@ The thermostat gathers temperature data from multiple ESP8266 modules. The tempe
 
 #### Dependencies
 apt requirements:  
-build-essential python-dev git libgpiod2 python3-rpi.gpio python3-systemd apache2
+build-essential libgpiod2 python3-rpi.gpio python3-systemd apache2 libsystemd-dev
 
-pip requirements:  
-adafruit-circuitpython-dht fastapi-restful uvicorn[standard] 
+ - `cd rpi-thermostat/daemon`
+ - Setup a virtual environment `python -m venv .env`
+ - Activate the virtual env `source ~/.env/bin/activate`
+ - Install dependencies `pip install -r requirements.txt`
 
 #### Daemon setup:
 
