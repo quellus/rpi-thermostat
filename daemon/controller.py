@@ -1,4 +1,3 @@
-import adafruit_dht
 import board
 import RPi.GPIO as GPIO
 import models
@@ -37,7 +36,6 @@ class Controller:
     GPIO.setup(AC_PIN, GPIO.OUT, initial=OFF)
     GPIO.setup(FURNACE_PIN, GPIO.OUT, initial=OFF)
 
-    self._dht = adafruit_dht.DHT22(board.D4, use_pulseio=False)
     self.last_update_time = None
     self.history = []
 
@@ -56,37 +54,6 @@ class Controller:
 
   def get_history(self):
     return self.history
-
-
-  def get_temperature(self):
-    for i in range(3):
-      try:
-        temperature_c = self._dht.temperature
-        if temperature_c:
-          temperature_f = temperature_c * (9 / 5) + 32
-          log.info("temperature: {}".format(temperature_f))
-          print("temperature: {}".format(temperature_f))
-          return round(temperature_f, 3)
-      except:
-        log.error("Temperature didn't read, trying again")
-        print("Temperature didn't read, trying again")
-        continue
-    return None
-
-
-  def get_humidity(self):
-    for i in range(3):
-      try:
-        humidity = self._dht.humidity
-        if humidity:
-          log.info("humidity: {}".format(humidity))
-          print("humidity: {}".format(humidity))
-          return humidity
-      except:
-        log.error("Humidity didn't read, trying again")
-        print("Humidity didn't read, trying again")
-        continue
-    return None
 
   
   def set_target_temp(self, temp: int):
@@ -107,14 +74,6 @@ class Controller:
 
   def update_sensor_status(self, name: str, temp: float, humidity: float):
     self.status.sensors[name] = {"humidity": humidity, "temperature": temp, "timestamp": time.time()}
-
-
-  def update_local_sensor(self):
-    temperature = self.get_temperature()
-    humidity = self.get_humidity()
-    log.info("{} {}".format(temperature, humidity))
-    if humidity and temperature:
-      self.status.sensors["Closet"] = {"humidity": humidity, "temperature": temperature, "timestamp": time.time()}
 
 
   def drive_status(self):

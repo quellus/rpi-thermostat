@@ -6,7 +6,6 @@ from pydantic import BaseModel
 import asyncio
 
 from controller import Controller
-import ssl
 import models
 
 
@@ -25,26 +24,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-async def drive_status_loop():
-  global is_shutdown
-  while (not is_shutdown):
-    print("Driving status loop")
-    drive_status()
-    await asyncio.sleep(10)
-
-async def drive_history_loop():
-  global is_shutdown
-  while (not is_shutdown):
-    print("Driving history loop")
-    controller.update_history()
-    await asyncio.sleep(10)
-
-
 origins = [
   "*",
   "https://raspberrypi.local"
 ]
-
 
 
 app.add_middleware(
@@ -56,11 +39,27 @@ app.add_middleware(
 )
 
 
+async def drive_status_loop():
+  global is_shutdown
+  while (not is_shutdown):
+    print("Driving status loop")
+    drive_status()
+    await asyncio.sleep(10)
+
+
+async def drive_history_loop():
+  global is_shutdown
+  while (not is_shutdown):
+    print("Driving history loop")
+    controller.update_history()
+    await asyncio.sleep(120)
+
+
 def drive_status():
   try:
     controller.drive_status()
   except asyncio.CancelledError:
-    print("the exception accepted successfully")
+    pass
 
 
 @app.get("/", response_model=models.StatusObject)
@@ -68,18 +67,16 @@ async def root() -> dict:
   return models.StatusObject(status = controller.get_status())
 
 
-@app.get("/temperature")
-async def get_temperature() -> float:
-  return controller.get_temperature()
-
 @app.get("/history")
 async def get_history() -> models.HistoryObject:
   return models.HistoryObject(history = controller.get_history())
+
 
 @app.put("/sensor-status")
 async def update_sensor_status(name: str, temperature: float, humidity: float):
   controller.update_sensor_status(name, temperature, humidity)
   return "Success"
+
 
 @app.put("/target_temperature")
 async def set_target_temp(temperature: int) -> str:
@@ -92,9 +89,9 @@ async def set_usable(ac: bool, cooler: bool, furnace: bool):
   controller.set_usable(ac, cooler, furnace)
   return "Success"
 
+
 @app.put("/manual_override")
 async def manual_override(override: bool, pins: models.Pins):
   print(override, pins)
   controller.set_manual_override(override, pins)
   return "Success"
-
