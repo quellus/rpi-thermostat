@@ -1,3 +1,4 @@
+adafruit-circuitpython-dht
 fastapi[standard]
 fastapi-utils
 typing_inspect
