@@ -1,10 +1,12 @@
-from fastapi import FastAPI
-from fastapi_restful.tasks import repeat_every
+from fastapi import FastAPI, Response, status
+from fastapi_utils.tasks import repeat_every
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from pydantic import BaseModel
+import asyncio
 
 from controller import Controller
 from database import Database
-import ssl
 import models
 import logging
 from systemd.journal import JournalHandler
@@ -19,24 +21,10 @@ app = FastAPI()
 database = Database(log)
 controller = Controller(log)
 
-origins = [
-  "*",
-  "https://raspberrypi.local"
-]
+is_shutdown = False
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain('/home/pi/daemon-selfsigned.crt', keyfile='/home/pi/daemon-selfsigned.key')
-
-app.add_middleware(
-  CORSMiddleware,
-  allow_origins=origins,
-  allow_credentials=True,
-  allow_methods=["*"],
-  allow_headers=["*"],
-)
-
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
   try:
     dotenv.load_dotenv()
   except Exception as e:
@@ -49,21 +37,55 @@ async def startup():
     except Exception as e:
       log.info("Connecting to database failed with " + str(e))
       print("Connecting to database failed with " + str(e))
+  global is_shutdown
+  print("the lifespan is happening")
+  asyncio.create_task(drive_status_loop())
+  asyncio.create_task(drive_history_loop())
+  yield
+  print("post-yield")
+  is_shutdown = True
+
+app = FastAPI(lifespan=lifespan)
+
+origins = [
+  "*",
+  "https://raspberrypi.local"
+]
 
 
-@app.on_event("startup")
-@repeat_every(seconds=10)
-async def drive_status():
-  controller.drive_status()
-  if os.getenv("RPI_DB_ENABLED") == "true":
-    await database.update_averages(controller.status.average_temp, controller.status.target_temp)
-    await database.update_pins(controller.status.pins, controller.status.usable)
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=origins,
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
 
 
-@app.on_event("startup")
-@repeat_every(seconds=120)
-async def drive_history():
-  controller.update_history()
+async def drive_status_loop():
+  global is_shutdown
+  while (not is_shutdown):
+    print("Driving status loop")
+    drive_status()
+    if os.getenv("RPI_DB_ENABLED") == "true":
+      await database.update_averages(controller.status.average_temp, controller.status.target_temp)
+      await database.update_pins(controller.status.pins, controller.status.usable)
+    await asyncio.sleep(10)
+
+
+async def drive_history_loop():
+  global is_shutdown
+  while (not is_shutdown):
+    print("Driving history loop")
+    controller.update_history()
+    await asyncio.sleep(120)
+
+
+def drive_status():
+  try:
+    controller.drive_status()
+  except asyncio.CancelledError:
+    pass
 
 
 @app.on_event("shutdown")
@@ -80,13 +102,8 @@ async def root() -> dict:
   return models.StatusObject(status = controller.get_status())
 
 
-@app.get("/temperature")
-async def get_temperature() -> float:
-  return controller.get_temperature()
-
-
 @app.get("/history")
-async def get_history() -> dict:
+async def get_history() -> models.HistoryObject:
   return models.HistoryObject(history = controller.get_history())
 
 

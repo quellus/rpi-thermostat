@@ -18,7 +18,6 @@ class Status(BaseModel):
   usable: Usable
   target_temp: int
   average_temp: float
-  humidity: int
   manual_override: bool
   sensors: dict[str, dict]
 

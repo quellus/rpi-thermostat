@@ -1,6 +1,6 @@
 adafruit-circuitpython-dht
-fastapi-restful
-uvicorn[standard]
-python-dotenv
-asyncio
+fastapi[standard]
+fastapi-utils
+typing_inspect
+systemd-python
 asyncpg

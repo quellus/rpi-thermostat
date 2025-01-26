@@ -5,7 +5,13 @@ A cooler and furnace controller run by a RaspberryPi with wireless arduino-based
 ![image](https://github.com/user-attachments/assets/b730898e-81bf-48fd-b9f2-f95659548468)
 
 ## About
-This project was created to solve two problems. The first being that I wanted to be able to control my evaporative cooler and furnace with a single thermostat, and I was unable to find a commercially available thermostat that could do that. The second problem is the wiring for the thermostats in my residence were installed too close to the vents. As a result, the thermostats' temperature readings were terribly inaccurate.
+This project was created to solve two problems:
+
+1. There does not seem to be a consumer-available thermostat for controlling both a furnace and evaporative cooler. This requires two separate thermostats which can be difficult to control and requires the user to remember to turn one off when turning the other off.
+
+2. Most thermostats have one temperature sensor integrated into the thermostat. This means if the wiring is located an inoptimal location such as near a vent, the thermostat will never have an accurate reading of the temperature of the residence.
+
+This thermostat aims to solve these problems. It uses a Raspberry Pi to control the appliances and is fairly unconcerned about what they are making only the distinction between whether they cool or heat allowing it to control a furnace, evaporative cooler, and air conditioner. It also utilizes ESP8266 flashed with Arduino firmware as temperature sensors to monitor the temperature in multiple rooms simultaneously or a single, more optimal location.
 
 ### Hardware used
 * RaspberryPi
@@ -19,6 +25,7 @@ The thermostat gathers temperature data from multiple ESP8266 modules. The tempe
 
 ## Setup Instructions
 
+
 ### Arduino setup:
 
 1. Add and install [ESP8266](https://github.com/esp8266/Arduino).
@@ -30,60 +37,42 @@ The thermostat gathers temperature data from multiple ESP8266 modules. The tempe
 
 #### Dependencies
 apt requirements:  
-build-essential python-dev git libgpiod2 python3-rpi.gpio python3-systemd apache2
+build-essential libgpiod2 python3-rpi.gpio python3-systemd nginx libsystemd-dev
 
-pip requirements:  
-adafruit-circuitpython-dht fastapi-restful uvicorn[standard] 
+ - `cd rpi-thermostat/daemon`
+ - Setup a virtual environment `python -m venv .venv`
+ - Activate the virtual environment `source ~/.venv/bin/activate`
+ - Install dependencies `pip install -r requirements.txt`
 
 #### Daemon setup:
 
 ##### Development
 
 1. cd into the `daemon` directory of the project
-2. run `python -m uvicorn --host 0.0.0.0 main:app --reload`
-   - For HTTPS
-       - Generate a key and crt file with OpenSSL
-       - Instead, run `python -m uvicorn --host 0.0.0.0 main:app --ssl-keyfile ~/daemon-selfsigned.key --ssl-certfile ~/daemon-selfsigned.crt --reload` (adjust the file paths accordingly)
+2. Ensure you've activated the virtual environment
+2. run `fastapi dev --port 8001 --host 127.0.0.1 main.py`
 
 ##### Production
 
 - Copy `thermostat.service` to `/etc/systemd/system`
-- For HTTPS, generate a key and crt file with OpenSSL. `thermostat.service` by default expects these files to be located in `/home/pi/daemon-selfsigned.*`.
-- Edit the `thermostat.service` file with appropriate user, group, paths to key and cert files, and working directory path
+- Edit the `thermostat.service` file 
+    - Replace user and group with the appropriate user and group. Ideally a user that is not a sudoer
+    - Replace the two paths with a path to the daemon directory on the machine
 - Run `sudo systemctl daemon-reload` or reboot
 - Run `sudo systemctl enable thermostat` to enable the service
 
 The service will start on boot and automatically restart if anything goes wrong
 
-#### Webapp setup:
+#### Webapp and SSL proxy setup:
 
-install apache2 and make sure it is running
-
-copy the contents of the webapp directory to `/var/www/html/`
-
-run `sudo systemctl restart apache2`
-
-##### Setting up HTTPS with self-signed certificates:
-This section is slightly modified from [this tutorial](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-apache-in-ubuntu-16-04)
-
-1. Enable mode_ssl and restart apache server
-    1. `sudo a2enmod ssl`
-    2. `sudo systemctl restart apache2`
+1. Install nginx `sudo apt install nginx`
+2. Ensure nginx is running `sudo systemctl status nginx`
+3. Copy the contents of the webapp directory to `/var/www/html`
 2. Generate the SSL Certificate
-    1. `sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt -subj '/CN=localhost'`
+    1. `sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj '/CN=localhost'`
     2. Make sure to replace "localhost" in the command with the address/domain name used to access the webapp.
-3. Configure Apache
-    1. Create and edit the conf file `/etc/apache2/sites-available/your_domain_or_ip.conf`
-    2. ```
-        <VirtualHost *:443>
-            ServerName your_domain_or_ip
-            DocumentRoot /var/www/html
-
-            SSLEngine on
-            SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt
-            SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key
-        </VirtualHost>```
-    
-    3. Enable the confuration file
-      1. `sudo a2ensite /etc/apache2/sites-available/your_domain_or_ip.conf`
-      2. `sudo systemctl reload apache2`
+3. Configure Nginx
+    1. Edit the nginx.conf file
+        1. Replace `<server domain>` with the server's IP address or domain.
+        2. Replace `<fastapi-port>` with the port set in `thermostat.service`
+    2. Copy the file to `/etc/nginx/sites-available/<server.ip>`
