@@ -40,8 +40,8 @@ apt requirements:
 build-essential libgpiod2 python3-rpi.gpio python3-systemd nginx libsystemd-dev
 
  - `cd rpi-thermostat/daemon`
- - Setup a virtual environment `python -m venv .env`
- - Activate the virtual environment `source ~/.env/bin/activate`
+ - Setup a virtual environment `python -m venv .venv`
+ - Activate the virtual environment `source ~/.venv/bin/activate`
  - Install dependencies `pip install -r requirements.txt`
 
 #### Daemon setup:
