@@ -2,3 +2,4 @@ status.json
 __pycache__
 *.sw[a-p]
 .env
+.venv

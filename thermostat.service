@@ -4,7 +4,7 @@ Description=Python Daemon to control swamp cooler and furnace via FastAPI
 [Service]
 User=<user>
 Group=<group>
-ExecStart=<path/to/thermostat/directory>/daemon/.env/bin/fastapi run --port 8001 --host 127.0.0.1 main.py
+ExecStart=<path/to/thermostat/directory>/daemon/.venv/bin/fastapi run --port 8001 --host 127.0.0.1 main.py
 WorkingDirectory=<path/to/thermostat/directory>/daemon/
 Restart=always
 RestartSec=5
