@@ -6,9 +6,17 @@ class Database:
   def __init__(self, log):
     self.db_connection = None
     self.log = log
+    self.user = ""
+    self.password = ""
+    self.database = ""
+    self.host = ""
 
 
   async def connect_db(self, user: str, password: str, database: str, host: str):
+    self.user = user
+    self.password = password
+    self.database = database
+    self.host = host
     self.log.info("Connecting to database")
     print("Connecting to database")
     try:
@@ -30,7 +38,14 @@ class Database:
       await self.db_connection.close()
 
 
+  async def check_connection(self):
+    print("Checking db connection")
+    if self.db_connection == None or self.db_connection.is_closed():
+      await self.connect_db(self.user, self.password, self.database, self.host)
+
+
   async def update_sensors(self, name, temperature, humidity):
+    await self.check_connection()
     self.log.info("Sending sensor status to database")
     print("Sending sensor status to database")
 
@@ -48,6 +63,7 @@ class Database:
 
 
   async def update_averages(self, avg_temp, target_temp):
+    await self.check_connection()
     self.log.info("Sending averages to database")
     print("Sending averages to database")
 
@@ -65,6 +81,7 @@ class Database:
 
 
   async def update_pins(self, pins, usable):
+    await self.check_connection()
     self.log.info("Sending pins to database")
     print("Sending pins to database")
 
