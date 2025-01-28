@@ -37,7 +37,7 @@ The thermostat gathers temperature data from multiple ESP8266 modules. The tempe
 
 #### Dependencies
 apt requirements:  
-build-essential libgpiod2 python3-rpi.gpio python3-systemd nginx libsystemd-dev
+build-essential libgpiod2 nginx libsystemd-dev
 
  - `cd rpi-thermostat/daemon`
  - Setup a virtual environment `python -m venv .venv`
@@ -65,14 +65,14 @@ The service will start on boot and automatically restart if anything goes wrong
 
 #### Webapp and SSL proxy setup:
 
-1. Install nginx `sudo apt install nginx`
-2. Ensure nginx is running `sudo systemctl status nginx`
-3. Copy the contents of the webapp directory to `/var/www/html`
-2. Generate the SSL Certificate
+1. Ensure nginx is running `sudo systemctl status nginx`
+2. Copy the contents of the webapp directory to `/var/www/html`
+3. Generate the SSL Certificate
     1. `sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj '/CN=localhost'`
     2. Make sure to replace "localhost" in the command with the address/domain name used to access the webapp.
-3. Configure Nginx
+4. Configure Nginx
     1. Edit the nginx.conf file
         1. Replace `<server domain>` with the server's IP address or domain.
         2. Replace `<fastapi-port>` with the port set in `thermostat.service`
     2. Copy the file to `/etc/nginx/sites-available/<server.ip>`
+    3. Create symbolic link `sudo ln -s /etc/nginx/sites-available/<server.ip> /etc/nginx/sites-enabled/`

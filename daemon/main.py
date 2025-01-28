@@ -43,6 +43,8 @@ async def lifespan(app: FastAPI):
   asyncio.create_task(drive_history_loop())
   yield
   print("post-yield")
+  if os.getenv("RPI_DB_ENABLED") == "true":
+    await database.disconnect_db()
   is_shutdown = True
 
 app = FastAPI(lifespan=lifespan)
@@ -86,15 +88,6 @@ def drive_status():
     controller.drive_status()
   except asyncio.CancelledError:
     pass
-
-
-@app.on_event("shutdown")
-async def shutdown():
-  """
-  Close the connection to the database
-  """
-  if os.getenv("RPI_DB_ENABLED") == "true":
-    await database.disconnect_db()
 
 
 @app.get("/", response_model=models.StatusObject)
