@@ -2,7 +2,6 @@ from fastapi import FastAPI, Response, status
 from fastapi_utils.tasks import repeat_every
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from pydantic import BaseModel
 import asyncio
 
 from controller import Controller
@@ -10,8 +9,7 @@ from database import Database
 import models
 import logging
 from systemd.journal import JournalHandler
-import dotenv
-import os
+import config
 
 log = logging.getLogger("thermostat")
 log.addHandler(JournalHandler())
@@ -26,24 +24,27 @@ is_shutdown = False
 @asynccontextmanager
 async def lifespan(app: FastAPI):
   try:
-    dotenv.load_dotenv()
+    config.load_config()
+
   except Exception as e:
     log.info("Loading dot env file failed" + str(e))
     print("Loading dot env file failed " + str(e))
-  if os.getenv("RPI_DB_ENABLED") == "true":
+  if config.config["DATABASE"]["DB_ENABLED"] == "True":
     try:
-      await database.connect_db(os.getenv("RPI_DB_USER"), os.getenv("RPI_DB_PASSWORD"),
-                                os.getenv("RPI_DB_DATABASE"), os.getenv("RPI_DB_HOST"))
+      await database.connect_db(config.config["DATABASE"]["DB_USER"], config.config["DATABASE"]["DB_PASSWORD"],
+                                config.config["DATABASE"]["DB_DATABASE"], config.config["DATABASE"]["DB_HOST"])
     except Exception as e:
       log.info("Connecting to database failed with " + str(e))
       print("Connecting to database failed with " + str(e))
+  else:
+    log.info("Database disabled in config")
+    print("Database disabled in config")
   global is_shutdown
   print("the lifespan is happening")
   asyncio.create_task(drive_status_loop())
   asyncio.create_task(drive_history_loop())
   yield
-  print("post-yield")
-  if os.getenv("RPI_DB_ENABLED") == "true":
+  if config.config["DATABASE"]["DB_ENABLED"] == "True":
     await database.disconnect_db()
   is_shutdown = True
 
@@ -69,7 +70,7 @@ async def drive_status_loop():
   while (not is_shutdown):
     print("Driving status loop")
     drive_status()
-    if os.getenv("RPI_DB_ENABLED") == "true":
+    if config.config["DATABASE"]["DB_ENABLED"] == "True":
       await database.update_averages(controller.status.average_temp, controller.status.target_temp)
       await database.update_pins(controller.status.pins, controller.status.usable)
     await asyncio.sleep(10)
@@ -103,7 +104,7 @@ async def get_history() -> models.HistoryObject:
 @app.put("/sensor-status")
 async def update_sensor_status(name: str, temperature: float, humidity: float):
   controller.update_sensor_status(name, temperature, humidity)
-  if os.getenv("RPI_DB_ENABLED") == "true":
+  if config.config["DATABASE"]["DB_ENABLED"] == "True":
     await database.update_sensors(name, temperature, humidity)
 
   return "Success"

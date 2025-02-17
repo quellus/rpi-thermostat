@@ -1,4 +1,3 @@
-import board
 import RPi.GPIO as GPIO
 import models
 import time

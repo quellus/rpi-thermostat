@@ -17,8 +17,8 @@ class Database:
     self.password = password
     self.database = database
     self.host = host
-    self.log.info("Connecting to database")
-    print("Connecting to database")
+    self.log.info("Connecting to database at host " + host)
+    print("Connecting to database at host", host)
     try:
       self.db_connection = await asyncpg.connect(user=user, password=password,
         database=database, host=host)
@@ -39,7 +39,6 @@ class Database:
 
 
   async def check_connection(self):
-    print("Checking db connection")
     if self.db_connection == None or self.db_connection.is_closed():
       await self.connect_db(self.user, self.password, self.database, self.host)
 
