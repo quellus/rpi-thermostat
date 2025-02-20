@@ -1,5 +1,7 @@
 var xhr = new XMLHttpRequest()
 xhr.responseType=''
+var grafanaXhr = new XMLHttpRequest()
+grafanaXhr.responseType=''
 
 var restURL = "//" + window.location.host + ":8000/"
 var heartbeat = setInterval(getStatus, 2000)
@@ -14,7 +16,6 @@ function getStatus() {
       jsonResp = JSON.parse(xhr.responseText)
       let status = jsonResp["status"]
       let history = jsonResp["history"]
-
       if (status) {
         console.log(status)
         processStatus(status)
@@ -22,7 +23,7 @@ function getStatus() {
         console.log(history)
         processHistory(history)
       }
-     }
+    }
   }
   xhr.open("GET", restURL)
   xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
@@ -31,10 +32,22 @@ function getStatus() {
 }
 
 function getHistory() {
-  xhr.open("GET", restURL + "history")
-  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
-  xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
-  xhr.send()
+  grafanaXhr.onreadystatechange=(event)=>{
+    if(xhr.status==200 && xhr.readyState==4){
+      console.log("Grafana request successful")
+    } else {
+      console.error("Grafana request failed")
+      xhr.open("GET", restURL + "history")
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+      xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+      xhr.send()
+    }
+  }
+  
+  grafanaXhr.open("GET", "https://192.168.68.200:3000/d-solo/dedgrkr84gqv4b/testbench-averages?orgId=1&from=1739842635935&to=1739929035935&timezone=browser&panelId=1&__feature.dashboardSceneSolo")
+  grafanaXhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+  grafanaXhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+  grafanaXhr.send()
 }
 
 function temperatureUp() {
