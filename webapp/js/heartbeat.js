@@ -5,6 +5,25 @@ var restURL = "//" + window.location.host + ":8000/"
 var heartbeat = setInterval(getStatus, 2000)
 var historyHeartBeat = setInterval(getHistory, 120000)
 var chart = undefined
+
+var grafana_iframe = document.getElementById("grafana-embed-iframe")
+var grafana_content = document.getElementById("grafana-embed")
+var history_graph_content = document.getElementById("history-chart")
+
+fetch('config.json')
+  .then(response => response.json())
+  .then(data => {
+    if (data && data["use_grafana"]) {
+      grafana_iframe.src = data["grafana_embed_url"]
+      history_graph_content.style.display = 'none'
+    } else {
+      grafana_content.style.display = 'none'
+    }
+  })
+  .catch(error => {
+    console.error('Error fetching or parsing config JSON:', error);
+  })
+
 getStatus()
 getHistory()
 
