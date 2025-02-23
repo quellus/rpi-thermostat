@@ -18,6 +18,7 @@ fetch('config.json')
       use_grafana = true
       grafana_iframe.src = data["grafana_embed_url"]
       history_graph_content.style.display = 'none'
+      grafana_content.style.display = 'block'
     } else {
       grafana_content.style.display = 'none'
     }
