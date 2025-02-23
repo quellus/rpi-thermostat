@@ -9,11 +9,13 @@ var chart = undefined
 var grafana_iframe = document.getElementById("grafana-embed-iframe")
 var grafana_content = document.getElementById("grafana-embed")
 var history_graph_content = document.getElementById("history-chart")
+var use_grafana = false
 
 fetch('config.json')
   .then(response => response.json())
   .then(data => {
     if (data && data["use_grafana"]) {
+      use_grafana = true
       grafana_iframe.src = data["grafana_embed_url"]
       history_graph_content.style.display = 'none'
     } else {
@@ -35,7 +37,6 @@ function getStatus() {
       let history = jsonResp["history"]
 
       if (status) {
-        console.log(status)
         processStatus(status)
       } else if (history) {
         console.log(history)
@@ -50,10 +51,15 @@ function getStatus() {
 }
 
 function getHistory() {
-  xhr.open("GET", restURL + "history")
-  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
-  xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
-  xhr.send()
+  if (use_grafana) {
+    console.log("Refreshing embedded graph")
+    grafana_iframe.src = grafana_iframe.src
+  } else {
+    xhr.open("GET", restURL + "history")
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+    xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
+    xhr.send()
+  }
 }
 
 function temperatureUp() {
