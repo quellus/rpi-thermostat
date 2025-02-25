@@ -76,3 +76,11 @@ The service will start on boot and automatically restart if anything goes wrong
         2. Replace `<fastapi-port>` with the port set in `thermostat.service`
     2. Copy the file to `/etc/nginx/sites-available/<server.ip>`
     3. Create symbolic link `sudo ln -s /etc/nginx/sites-available/<server.ip> /etc/nginx/sites-enabled/`
+  
+#### Postgres database and Grafana graphs (Optional)
+
+The webapp's default ChartJS graph only shows the data stored in the RaspberryPi's memory. This was done not to limit the amount of data and writes the SD card will be subject to.
+An alternative is to setup a Postgres database on a different machine and embed a Grafana graph using the data from the database.
+![image](https://github.com/user-attachments/assets/e85a4ecc-1ca1-4be0-a681-6a88151ee28a)
+
+
