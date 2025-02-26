@@ -29,6 +29,50 @@ class Database:
     else:
       self.log.error("Database connection successful")
       print("Database connection successful")
+    await self.create_tables()
+
+
+  async def create_tables(self):
+    self.log.info("Sending requests to create tables on database")
+    print("Sending requests to create tables on database")
+    create_table_queries = [
+        """
+        CREATE TABLE IF NOT EXISTS sensors (
+            time timestamptz,
+            sensor_id text,
+            temperature real,
+            humidity real
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS averages (
+            time timestamptz,
+            average_temp real,
+            target_temp real
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS pins (
+            time timestamptz,
+            pump_available bool,
+            pump_active bool,
+            ac_available bool,
+            ac_active bool,
+            furnace_available bool,
+            furnace_active bool,
+            fan_available bool,
+            fan_active bool
+        )
+        """
+    ]
+    try:
+      for query in create_table_queries:
+        await self.db_connection.execute(query)
+        print(f"Executed: {query.strip().splitlines()[0]}...")
+    except Exception as e:
+      self.log.error("Database query failed with:\n" + str(e))
+      print("Database query failed with:")
+      print(str(e))
 
 
   async def disconnect_db(self):
