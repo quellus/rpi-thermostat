@@ -3,3 +3,4 @@ __pycache__
 *.sw[a-p]
 .venv
 config.ini
+config.json
