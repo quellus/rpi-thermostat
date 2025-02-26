@@ -1,13 +1,6 @@
-import board
 import RPi.GPIO as GPIO
 import models
-import logging
 import time
-from systemd.journal import JournalHandler
-
-log = logging.getLogger("thermostat")
-log.addHandler(JournalHandler())
-log.setLevel(logging.INFO)
 
 PUMP_PIN = 5
 FAN_ON_PIN = 6
@@ -29,7 +22,7 @@ SENSOR_STALE_TIMEOUT = 1 * 60 # minutes converted to seconds
 HISTORY_MAX_ENTRIES = 500
 
 class Controller:
-  def __init__(self):
+  def __init__(self, log):
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(PUMP_PIN, GPIO.OUT, initial=OFF)
     GPIO.setup(FAN_ON_PIN, GPIO.OUT, initial=OFF)
@@ -38,14 +31,17 @@ class Controller:
 
     self.last_update_time = None
     self.history = []
-
+    self.log = log
+    
     try:
       f = open("status.json", "r")
       self.status = models.Status.parse_raw(f.read())
     except Exception:
+      self.log.info("No status file found. Using default values.")
+      print("No status file found. Using default values.")
       pins = models.Pins(pump = False, fan_on = False, ac = False, furnace = False)
       usable = models.Usable(ac = True, cooler = True, furnace = True)
-      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, average_temp = 72, humidity = 30, manual_override = False, sensors = {})
+      self.status = models.Status(pins = pins, usable = usable, target_temp = 72, average_temp = 72, manual_override = False, sensors = {})
 
 
   def get_status(self):
@@ -57,7 +53,7 @@ class Controller:
 
   
   def set_target_temp(self, temp: int):
-    log.info("target temp set to {}".format(temp))
+    self.log.info("target temp set to {}".format(temp))
     print("target temp set to {}".format(temp))
     self.status.target_temp = temp
 
@@ -117,15 +113,15 @@ class Controller:
                 self.last_update_time = time.time()
             else:
               self.all_off()
-
+      
       self.write_status()
     except Exception as e:
-      log.critical(e)
-      print(e)
+      self.log.critical(str(e))
+      print(str(e))
 
 
   def update_history(self):
-    log.info("Updating history " + str(self.status.average_temp))
+    self.log.info("Updating history " + str(self.status.average_temp))
     print("Updating history " + str(self.status.average_temp))
     time_obj = time.localtime()
     time_asc = time.asctime(time_obj)
@@ -154,7 +150,7 @@ class Controller:
 
 
   def fan_low_on(self):
-    log.info("Turning on cooler to low")
+    self.log.info("Turning on cooler to low")
     print("Turning on cooler to low")
     if self.status.usable.cooler:
       self.set_pins(True, True, False, False)
@@ -163,7 +159,7 @@ class Controller:
 
 
   def ac_on(self):
-    log.info("Turning on ac")
+    self.log.info("Turning on ac")
     print("Turning on ac")
     if self.status.usable.ac:
       self.set_pins(False, False, True, False)
@@ -172,7 +168,7 @@ class Controller:
 
 
   def furnace_on(self):
-    log.info("Turning on furnace")
+    self.log.info("Turning on furnace")
     print("Turning on furnace")
     if self.status.usable.furnace:
       self.set_pins(False, False, False, True)
@@ -181,7 +177,7 @@ class Controller:
 
 
   def all_off(self):
-    log.info("Turning cooler and furnace off")
+    self.log.info("Turning cooler and furnace off")
     print("Turning cooler and furnace off")
     self.set_pins(False, False, False, False)
 

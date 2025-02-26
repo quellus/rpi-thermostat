@@ -2,25 +2,51 @@ from fastapi import FastAPI, Response, status
 from fastapi_utils.tasks import repeat_every
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from pydantic import BaseModel
 import asyncio
 
 from controller import Controller
+from database import Database
 import models
+import logging
+from systemd.journal import JournalHandler
+import config
 
+log = logging.getLogger("thermostat")
+log.addHandler(JournalHandler())
+log.setLevel(logging.INFO)
+
+app = FastAPI()
+database = Database(log)
+controller = Controller(log)
 
 is_shutdown = False
-controller = Controller()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global is_shutdown
-    print("the lifespan is happening")
-    asyncio.create_task(drive_status_loop())
-    asyncio.create_task(drive_history_loop())
-    yield
-    print("post-yield")
-    is_shutdown = True
+  try:
+    config.load_config()
+
+  except Exception as e:
+    log.info("Loading dot env file failed" + str(e))
+    print("Loading dot env file failed " + str(e))
+  if config.config["DATABASE"]["DB_ENABLED"] == "True":
+    try:
+      await database.connect_db(config.config["DATABASE"]["DB_USER"], config.config["DATABASE"]["DB_PASSWORD"],
+                                config.config["DATABASE"]["DB_DATABASE"], config.config["DATABASE"]["DB_HOST"])
+    except Exception as e:
+      log.info("Connecting to database failed with " + str(e))
+      print("Connecting to database failed with " + str(e))
+  else:
+    log.info("Database disabled in config")
+    print("Database disabled in config")
+  global is_shutdown
+  print("the lifespan is happening")
+  asyncio.create_task(drive_status_loop())
+  asyncio.create_task(drive_history_loop())
+  yield
+  if config.config["DATABASE"]["DB_ENABLED"] == "True":
+    await database.disconnect_db()
+  is_shutdown = True
 
 app = FastAPI(lifespan=lifespan)
 
@@ -44,6 +70,9 @@ async def drive_status_loop():
   while (not is_shutdown):
     print("Driving status loop")
     drive_status()
+    if config.config["DATABASE"]["DB_ENABLED"] == "True":
+      await database.update_averages(controller.status.average_temp, controller.status.target_temp)
+      await database.update_pins(controller.status.pins, controller.status.usable)
     await asyncio.sleep(10)
 
 
@@ -75,6 +104,9 @@ async def get_history() -> models.HistoryObject:
 @app.put("/sensor-status")
 async def update_sensor_status(name: str, temperature: float, humidity: float):
   controller.update_sensor_status(name, temperature, humidity)
+  if config.config["DATABASE"]["DB_ENABLED"] == "True":
+    await database.update_sensors(name, temperature, humidity)
+
   return "Success"
 
 
