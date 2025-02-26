@@ -83,4 +83,33 @@ The webapp's default ChartJS graph only shows the data stored in the RaspberryPi
 An alternative is to setup a Postgres database on a different machine and embed a Grafana graph using the data from the database.
 ![image](https://github.com/user-attachments/assets/e85a4ecc-1ca1-4be0-a681-6a88151ee28a)
 
+##### Postgres
 
+The daemon only requires a Postgres instance with a database. On first run, it will send queries to generate the necessary tables. Config for connecting to the Postgres instance must be added to `daemon/config.ini`.
+
+1. Configure postgres with a username and password
+2. Create an empty database
+3. Run the daemon once to generate the default config file `daemon/config.ini`
+4. Edit the file `daemon/config.ini`
+  1. `db_enabled` set to "True"
+  2. `db_user` username with access to database
+  3. `db_password` password for `db_user`
+  4. `db_database` name of database on the postgres server
+  5. `db_host` hostname/ip address for postgres server
+
+##### Grafana
+
+Grafana is used to generate a pretty line graph showing temperature changes over the last 12 hours. The webapp, however, will embed any url in the config.
+
+1. Create a new dashboard
+2. Add visualization
+3. Create the graph with the following query `SELECT time, average_temp, target_temp FROM averages as value`
+4. Get embed link
+    1. Click the 3 dots botton in the top right of the grpah
+    2. Select `Share`
+    3. Select the `Embed` tab
+    4. Disable `Lock time range`
+    5. Copy only the `src` url
+5. Edit `webapp/config.json`
+    1.  Change `use_grafana` to `true`
+    2.  Change `grafana_embed_url` to the url copied in the previous step
