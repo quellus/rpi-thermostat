@@ -1,6 +1,4 @@
-"""
-The entry point into the project.
-"""
+"""The entry point into the project."""
 
 import logging
 import asyncio
@@ -22,13 +20,9 @@ log.setLevel(logging.INFO)
 database = Database(log)
 controller = Controller(log)
 
-is_shutdown = False
-
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Run when the program starts/terminates
-    """
+async def lifespan(_app: FastAPI):
+    """Run when the program starts/terminates"""
     await _startup()
     yield
     await _shutdown()
@@ -75,8 +69,6 @@ async def _startup():
 async def _shutdown():
     if config.config["DATABASE"]["DB_ENABLED"] == "True":
         await database.disconnect_db()
-    global is_shutdown
-    is_shutdown = True
 
 
 async def drive_status_loop():
@@ -87,8 +79,7 @@ async def drive_status_loop():
     Caution: Will block forever if awaited. Use as async task instead.
     """
     interval_seconds = 10
-    global is_shutdown
-    while not is_shutdown:
+    while True:
         print("Driving status loop")
         controller.drive_status()
         if config.config["DATABASE"]["DB_ENABLED"] == "True":
@@ -104,8 +95,7 @@ async def drive_history_loop():
 
     Caution: Will block forever if awaited. Use as async task instead.
     """
-    global is_shutdown
-    while not is_shutdown:
+    while True:
         print("Driving history loop")
         controller.update_history()
         await asyncio.sleep(120)
@@ -113,25 +103,22 @@ async def drive_history_loop():
 
 @app.get("/", response_model=models.StatusObject)
 async def root() -> dict:
-    """
-    Returns the current status of the thermostat.
-    """
+    """Returns the current status of the thermostat."""
     return models.StatusObject(status = controller.get_status())
 
 
 @app.get("/history")
 async def get_history() -> models.HistoryObject:
     """
-    Returns a list of tuples containing timestamps and temperature.
+    Gets the history of the average temperatures
+    Returns: list of tuples containing timestamps and temperature.
     """
     return models.HistoryObject(history = controller.get_history())
 
 
 @app.put("/sensor-status")
 async def update_sensor_status(name: str, temperature: float, humidity: float):
-    """
-    Adds or updates an entry to the sensors list keyed by `name`.
-    """
+    """Adds or updates an entry to the sensors list keyed by `name`."""
     controller.update_sensor_status(name, temperature, humidity)
     if config.config["DATABASE"]["DB_ENABLED"] == "True":
         await database.update_sensors(name, temperature, humidity)
@@ -141,18 +128,14 @@ async def update_sensor_status(name: str, temperature: float, humidity: float):
 
 @app.put("/target_temperature")
 async def set_target_temp(temperature: int) -> str:
-    """
-    Changes the average temperature the thermostat aims for.
-    """
+    """Sets the temperature the thermostat aims for."""
     controller.set_target_temp(temperature)
     return f"Temperature set to f{temperature} degrees fahrenheit"
 
 
 @app.put("/usable")
 async def set_usable(ac: bool, cooler: bool, furnace: bool):
-    """
-    Enables/disables the systems.
-    """
+    """Set which systems the thermostat can use."""
     controller.set_usable(ac, cooler, furnace)
     return "Success"
 

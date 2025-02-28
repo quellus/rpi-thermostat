@@ -1,3 +1,5 @@
+"""Handles IO of config file."""
+
 from configparser import ConfigParser
 import os
 
@@ -6,6 +8,10 @@ config = ConfigParser()
 
 
 def load_config():
+    """
+    Reads config from `CONFIG_PATH`
+    If doesn't exist, creates the file with default values.
+    """
     # Default values
     defaults = {
         'DATABASE': {
@@ -24,12 +30,12 @@ def load_config():
     rewrite = False
 
     # Fill in missing details
-    for category in defaults:
+    for category, items in defaults.items():
         if category in config:
             has_category = category in config
-            for key in defaults[category]:
+            for key in items:
                 if has_category:
-                    if not (key in config[category]):
+                    if key not in config[category]:
                         config[category][key] = defaults[category][key]
                         rewrite = True
         else:
@@ -39,7 +45,7 @@ def load_config():
     # Update the config file if necessary
     if rewrite:
         print("Writing config file")
-        with open(CONFIG_PATH, 'w') as configfile:
+        with open(CONFIG_PATH, 'w', encoding="utf-8") as configfile:
             config.write(configfile)
 
     return config
