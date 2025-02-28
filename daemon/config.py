@@ -4,6 +4,7 @@ import os
 CONFIG_PATH = "config.ini"
 config = ConfigParser()
 
+
 def load_config():
     # Default values
     defaults = {
@@ -34,7 +35,7 @@ def load_config():
         else:
             config[category] = defaults[category]
             rewrite = True
-    
+
     # Update the config file if necessary
     if rewrite:
         print("Writing config file")
