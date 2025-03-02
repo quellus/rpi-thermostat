@@ -1,30 +1,36 @@
+"""Defines datatypes FastAPI can send/receive."""
+
 from pydantic import BaseModel
 
+
 class Pins(BaseModel):
-  pump: bool
-  fan_on: bool
-  ac: bool
-  furnace: bool
+    """GPIO pin state."""
+    pump: bool
+    fan_on: bool
+    ac: bool
+    furnace: bool
 
 
 class Usable(BaseModel):
-  ac: bool
-  cooler: bool
-  furnace: bool
+    """Whether each system can be turned on."""
+    ac: bool
+    cooler: bool
+    furnace: bool
 
 
 class Status(BaseModel):
-  pins: Pins
-  usable: Usable
-  target_temp: int
-  average_temp: float
-  manual_override: bool
-  sensors: dict[str, dict]
+    """Entire state of thermostat"""
+    pins: Pins
+    usable: Usable
+    target_temp: int
+    average_temp: float
+    manual_override: bool
+    sensors: dict[str, dict]
 
 
 class StatusObject(BaseModel):
-  status: Status
+    status: Status
 
 
 class HistoryObject(BaseModel):
-  history: list 
+    history: list
