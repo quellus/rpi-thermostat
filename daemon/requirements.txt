@@ -1,6 +1,7 @@
-adafruit-circuitpython-dht
-fastapi[standard]
+Mock.GPIO==0.1.10
+fastapi[standard]==0.115.11
 fastapi-utils
 typing_inspect
-systemd-python
 asyncpg
+systemd-python
+adafruit-circuitpython-dht
