@@ -1,7 +1,12 @@
 """Handles GPIO pin control."""
 # pylint: disable=E1101
-# from RPi import GPIO
-import RPi.GPIO as GPIO
+
+try:
+    import RPi.GPIO as GPIO
+except:
+    import Mock.GPIO as GPIO
+
+import models
 
 ON = GPIO.LOW
 OFF = GPIO.HIGH
@@ -19,11 +24,48 @@ class GpioController():
         GPIO.setup(FAN_ON_PIN, GPIO.OUT, initial=OFF)
         GPIO.setup(AC_PIN, GPIO.OUT, initial=OFF)
         GPIO.setup(FURNACE_PIN, GPIO.OUT, initial=OFF)
-    
+
+        self.pins_status = models.Pins(
+            pump=False, fan_on=False, ac=False, furnace=False)
+
+
+    def fan_low_on(self):
+        self.log.info("Turning on cooler to low")
+        print("Turning on cooler to low")
+        if self.status.usable.cooler:
+            self._set_pins(True, True, False, False)
+        else:
+            self._all_off()
+
+
+    def ac_on(self):
+        self.log.info("Turning on ac")
+        print("Turning on ac")
+        if self.status.usable.ac:
+            self._set_pins(False, False, True, False)
+        else:
+            self._all_off()
+
+
+    def furnace_on(self):
+        self.log.info("Turning on furnace")
+        print("Turning on furnace")
+        if self.status.usable.furnace:
+            self._set_pins(False, False, False, True)
+        else:
+            self._all_off()
+
+
+    def all_off(self):
+        self.log.info("Turning cooler and furnace off")
+        print("Turning cooler and furnace off")
+        self._set_pins(False, False, False, False)
+
+
     def set_pins(self, pump: bool, fan_on: bool, ac: bool, furnace: bool):
-        pins_status = models.Pins(
+        """Sets state of each system. True turns the system ON, False turns it OFF"""
+        self.pins_status = models.Pins(
             pump=pump, fan_on=fan_on, ac=ac, furnace=furnace)
-        self.status.pins = pins_status
         pump_pin = OFF
         fan_on_pin = OFF
         ac_pin = OFF
