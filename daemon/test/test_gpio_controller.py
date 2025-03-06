@@ -2,9 +2,10 @@
 
 import unittest
 from unittest.mock import patch
+import Mock.GPIO as GPIO
+
 import gpio_controller
 import models
-import Mock.GPIO as GPIO
 
 pins = [
         gpio_controller.PUMP_PIN, 
