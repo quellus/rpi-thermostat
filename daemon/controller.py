@@ -17,7 +17,13 @@ from gpio_controller import GpioController
 CYCLE_TIME = 2 * 60  # minutes converted to seconds
 SENSOR_STALE_TIMEOUT = 1 * 60  # minutes converted to seconds
 HISTORY_MAX_ENTRIES = 500
-
+DEFAULT_STATUS = models.Status(
+                    pins=models.Pins(pump=False, fan_on=False, ac=False, furnace=False),
+                    usable=models.Usable(ac=True, cooler=True, furnace=True),
+                    target_temp=72,
+                    average_temp=72,
+                    manual_override=False,
+                    sensors={})
 
 class Controller:
     """Handles keeping track of status and controlling the thermostat"""
@@ -29,19 +35,12 @@ class Controller:
 
         try:
             with open("status.json", "r", encoding="utf-8") as file:
-                self.status = models.Status.parse_raw(file.read())
+                self.status = models.Status.model_validate_json(file.read())
         # pylint: disable=W0718
         except Exception:
             self.log.info("No status file found. Using default values.")
             print("No status file found. Using default values.")
-            usable = models.Usable(ac=True, cooler=True, furnace=True)
-            self.status = models.Status(
-                pins=self.gpio_controller.pins_status,
-                usable=usable,
-                target_temp=72,
-                average_temp=72,
-                manual_override=False,
-                sensors={})
+            self.status = DEFAULT_STATUS
 
 
     def get_status(self) -> models.Status:

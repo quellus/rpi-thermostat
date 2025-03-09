@@ -10,7 +10,7 @@ import models
 pins = [
         gpio_controller.PUMP_PIN, 
         gpio_controller.FAN_ON_PIN, 
-        gpio_controller.AC_PIN, 
+        gpio_controller.AC_PIN,
         gpio_controller.FURNACE_PIN
     ]
 
