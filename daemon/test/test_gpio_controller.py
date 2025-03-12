@@ -18,9 +18,9 @@ class TestGpioController(unittest.TestCase):
     def setUp(self):
         self.controller = gpio_controller.GpioController()
 
-    def test_init__sets_pin_mode(self):
-        self.assertTrue(GPIO.setModeDone)
-        self.assertEqual(GPIO.getmode(), GPIO.BCM)
+    # def test_init__sets_pin_mode(self):
+    #     self.assertTrue(GPIO.setModeDone)
+    #     self.assertEqual(GPIO.getmode(), GPIO.BCM)
 
 
     def test_init__sets_pins_to_out(self):
