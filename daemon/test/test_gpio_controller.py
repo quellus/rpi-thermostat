@@ -16,7 +16,8 @@ pins = [
 
 class TestGpioController(unittest.TestCase):
     def setUp(self):
-        self.controller = gpio_controller.GpioController()
+        self.log = unittest.mock.MagicMock()
+        self.controller = gpio_controller.GpioController(self.log)
 
     # def test_init__sets_pin_mode(self):
     #     self.assertTrue(GPIO.setModeDone)

@@ -21,7 +21,8 @@ FURNACE_PIN = 13
 
 class GpioController():
     """Encapsulates control of GPIO pins and creates aliases for each pin"""
-    def __init__(self):
+    def __init__(self, log):
+        self.log = log
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(PUMP_PIN, GPIO.OUT, initial=OFF)
         GPIO.setup(FAN_ON_PIN, GPIO.OUT, initial=OFF)
@@ -33,21 +34,29 @@ class GpioController():
 
     def fan_low_on(self):
         """Turns the cooler pump and fan on"""
+        self.log.info("Turning on fan low")
+        print("Turning on fan low")
         self.set_pins(True, True, False, False)
 
 
     def ac_on(self):
         """Turns A/C on"""
+        self.log.info("Turning on ac")
+        print("Turning on ac")
         self.set_pins(False, False, True, False)
 
 
     def furnace_on(self):
         """Turns furnace on"""
+        self.log.info("Turning on furnace")
+        print("Turning on furnace")
         self.set_pins(False, False, False, True)
 
 
     def all_off(self):
         """Turns all pins off"""
+        self.log.info("Turning on all systems off")
+        print("Turning on all systems off")
         self.set_pins(False, False, False, False)
 
 
