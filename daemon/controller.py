@@ -31,7 +31,7 @@ class Controller:
         self.last_update_time = None
         self.history = []
         self.log = log
-        self.gpio_controller = GpioController()
+        self.gpio_controller = GpioController(log)
 
         try:
             with open("status.json", "r", encoding="utf-8") as file:
@@ -66,8 +66,8 @@ class Controller:
 
     def set_target_temp(self, temp: int):
         """Sets the temperature the thermostat aims for."""
-        self.log.info(f"target temp set to f{temp}")
-        print(f"target temp set to f{temp}")
+        self.log.info(f"target temp set to {temp}")
+        print(f"target temp set to {temp}")
         self.status.target_temp = temp
 
 
@@ -85,6 +85,7 @@ class Controller:
         """
         self.status.manual_override = override
         self.gpio_controller.set_pins(pins.pump, pins.fan_on, pins.ac, pins.furnace)
+        self.status.pins = self.gpio_controller.pins_status
 
 
     def drive_status(self):
@@ -135,7 +136,7 @@ class Controller:
                                 self.last_update_time = time.time()
                         else:
                             self.gpio_controller.all_off()
-
+            self.status.pins = self.gpio_controller.pins_status
             self._write_status()
         # pylint: disable=W0718
         except Exception as e:
@@ -148,8 +149,8 @@ class Controller:
         Adds the current average temperature to the history list.
         Deletes oldest entries if maximum has been reached.
         """
-        self.log.info(f"Updating history f{str(self.status.average_temp)}")
-        print(f"Updating history f{str(self.status.average_temp)}")
+        self.log.info(f"Updating history {str(self.status.average_temp)}")
+        print(f"Updating history {str(self.status.average_temp)}")
         time_obj = time.localtime()
         time_asc = time.asctime(time_obj)
         self.history.append((time_asc, self.status.average_temp))
