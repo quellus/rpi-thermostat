@@ -130,7 +130,7 @@ async def update_sensor_status(name: str, temperature: float, humidity: float):
 async def set_target_temp(temperature: int) -> str:
     """Sets the temperature the thermostat aims for."""
     controller.set_target_temp(temperature)
-    return f"Temperature set to f{temperature} degrees fahrenheit"
+    return f"Temperature set to {temperature} degrees fahrenheit"
 
 
 @app.put("/usable")
