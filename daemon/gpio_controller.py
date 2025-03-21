@@ -30,6 +30,17 @@ class GpioController():
         GPIO.setup(FURNACE_PIN, GPIO.OUT, initial=OFF)
 
         self.pins_status = models.Pins(pump=False, fan_on=False, ac=False, furnace=False)
+        self.usable = models.Usable(ac = False, cooler = False, furnace = False)
+
+    def cooling_on(self):
+        """
+        Turns on ac or cooler depending on which is "usable".
+        If both are usable, it prioritizes the ac
+        """
+        if self.usable.ac:
+            self.ac_on()
+        elif self.usable.cooler:
+            self.fan_low_on()
 
 
     def fan_low_on(self):
