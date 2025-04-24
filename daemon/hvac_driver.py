@@ -11,19 +11,17 @@ class HvacDriver():
     def __init__(self, log):
         self.log = log
         self.last_update_time = None
-        self.average_temperature = 0 # TODO
         self.gpio_controller = GpioController(log)
 
 
-    def drive_hvac(self):
+    def drive_hvac(self, average_temperature, target_temperature):
         """
         If 2 minutes has passed:
             compares difference between set temperature and average temperature
             then turns on/off the appropriate system
         """
-        if (self.last_update_time is None or time.time() -
-                        self.last_update_time >= CYCLE_TIME):
-            temp_diff = 0 # TODO
+        if (self.last_update_time is None or time.time() - self.last_update_time >= CYCLE_TIME):
+            temp_diff = average_temperature - target_temperature
             if self._is_cooling_on():
                 if temp_diff <= 1:
                     self.gpio_controller.all_off()
@@ -35,12 +33,17 @@ class HvacDriver():
                 else:
                     self.gpio_controller.furnace_on()
             else:
-                if temp_diff <= -2:
-                    self.gpio_controller.furnace_on()
-                elif temp_diff >= 2:
+                if temp_diff >= 2:
                     self.gpio_controller.cooling_on()
+                elif temp_diff <= -2:
+                    self.gpio_controller.furnace_on()
                 else:
                     self.gpio_controller.all_off()
+            self._update()
+
+
+    def _update(self):
+        self.last_update_time = time.time()
 
 
     def _is_cooling_on(self) -> bool:
