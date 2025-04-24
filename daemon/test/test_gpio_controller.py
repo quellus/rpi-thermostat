@@ -18,7 +18,9 @@ class TestGpioController(unittest.TestCase):
     def setUp(self):
         self.log = unittest.mock.MagicMock()
         self.controller = gpio_controller.GpioController(self.log)
+        self.controller.usable = models.Usable(ac = True, cooler = True, furnace = True)
 
+    # This test is currently broken. https://github.com/codenio/Mock.GPIO/issues/15
     # def test_init__sets_pin_mode(self):
     #     self.assertTrue(GPIO.setModeDone)
     #     self.assertEqual(GPIO.getmode(), GPIO.BCM)
@@ -57,6 +59,26 @@ class TestGpioController(unittest.TestCase):
 
 
     @patch("gpio_controller.GPIO")  # Mock the GPIO module
+    def test_fan_low_on__doesnt_turn_on_pump_and_fan_when_not_usable(self, mock_gpio: unittest.mock.MagicMock):
+        self.controller.usable.cooler = False
+        self.controller.fan_low_on()
+
+        mock_gpio.output.assert_any_call(
+            gpio_controller.PUMP_PIN, gpio_controller.OFF)
+        mock_gpio.output.assert_any_call(
+            gpio_controller.FAN_ON_PIN, gpio_controller.OFF)
+        mock_gpio.output.assert_any_call(
+            gpio_controller.AC_PIN, gpio_controller.OFF)
+        mock_gpio.output.assert_any_call(
+            gpio_controller.FURNACE_PIN, gpio_controller.OFF)
+        
+        self.assertFalse(self.controller.pins_status.pump)
+        self.assertFalse(self.controller.pins_status.fan_on)
+        self.assertFalse(self.controller.pins_status.ac)
+        self.assertFalse(self.controller.pins_status.furnace)
+
+
+    @patch("gpio_controller.GPIO")  # Mock the GPIO module
     def test_ac_on__turns_ac_on(self, mock_gpio: unittest.mock.MagicMock):
         self.controller.ac_on()
         mock_gpio.output.assert_any_call(
@@ -71,6 +93,25 @@ class TestGpioController(unittest.TestCase):
         self.assertFalse(self.controller.pins_status.pump)
         self.assertFalse(self.controller.pins_status.fan_on)
         self.assertTrue(self.controller.pins_status.ac)
+        self.assertFalse(self.controller.pins_status.furnace)
+
+
+    @patch("gpio_controller.GPIO")  # Mock the GPIO module
+    def test_ac_on__doesnt_turn_ac_on_when_not_usable(self, mock_gpio: unittest.mock.MagicMock):
+        self.controller.usable.ac = False
+        self.controller.ac_on()
+        mock_gpio.output.assert_any_call(
+            gpio_controller.PUMP_PIN, gpio_controller.OFF)
+        mock_gpio.output.assert_any_call(
+            gpio_controller.FAN_ON_PIN, gpio_controller.OFF)
+        mock_gpio.output.assert_any_call(
+            gpio_controller.AC_PIN, gpio_controller.OFF)
+        mock_gpio.output.assert_any_call(
+            gpio_controller.FURNACE_PIN, gpio_controller.OFF)
+        
+        self.assertFalse(self.controller.pins_status.pump)
+        self.assertFalse(self.controller.pins_status.fan_on)
+        self.assertFalse(self.controller.pins_status.ac)
         self.assertFalse(self.controller.pins_status.furnace)
 
 
@@ -93,8 +134,9 @@ class TestGpioController(unittest.TestCase):
 
 
     @patch("gpio_controller.GPIO")  # Mock the GPIO module
-    def test_all_off__turns_all_pins_off(self, mock_gpio: unittest.mock.MagicMock):
-        self.controller.all_off()
+    def test_furnace_on__doesnt_turn_furnace_on_when_not_usable(self, mock_gpio: unittest.mock.MagicMock):
+        self.controller.usable.furnace = False
+        self.controller.furnace_on()
         mock_gpio.output.assert_any_call(
             gpio_controller.PUMP_PIN, gpio_controller.OFF)
         mock_gpio.output.assert_any_call(
@@ -111,8 +153,8 @@ class TestGpioController(unittest.TestCase):
 
 
     @patch("gpio_controller.GPIO")  # Mock the GPIO module
-    def test_set_pins__turns_off_all_pins(self, mock_gpio: unittest.mock.MagicMock):
-        self.controller.set_pins(False, False, False, False)
+    def test_all_off__turns_all_pins_off(self, mock_gpio: unittest.mock.MagicMock):
+        self.controller.all_off()
         mock_gpio.output.assert_any_call(
             gpio_controller.PUMP_PIN, gpio_controller.OFF)
         mock_gpio.output.assert_any_call(

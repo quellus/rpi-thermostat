@@ -47,21 +47,25 @@ class GpioController():
         """Turns the cooler pump and fan on"""
         self.log.info("Turning on fan low")
         print("Turning on fan low")
-        self.set_pins(True, True, False, False)
+        pump = self.usable.cooler
+        fan_on = self.usable.cooler
+        self.set_pins(pump, fan_on, False, False)
 
 
     def ac_on(self):
         """Turns A/C on"""
         self.log.info("Turning on ac")
         print("Turning on ac")
-        self.set_pins(False, False, True, False)
+        ac = self.usable.ac
+        self.set_pins(False, False, ac, False)
 
 
     def furnace_on(self):
         """Turns furnace on"""
         self.log.info("Turning on furnace")
         print("Turning on furnace")
-        self.set_pins(False, False, False, True)
+        furnace = self.usable.furnace
+        self.set_pins(False, False, False, furnace)
 
 
     def all_off(self):
