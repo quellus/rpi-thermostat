@@ -8,10 +8,10 @@ CYCLE_TIME = 2 * 60  # minutes converted to seconds
 
 class HvacDriver():
     """Handles when the cooling and heating systems turn off/on"""
-    def __init__(self, log):
+    def __init__(self, gpio_controller: GpioController, log):
         self.log = log
         self.last_update_time = None
-        self.gpio_controller = GpioController(log)
+        self.gpio_controller = gpio_controller
 
 
     def drive_hvac(self, average_temperature, target_temperature):

@@ -13,6 +13,7 @@ import time
 import models
 
 from gpio_controller import GpioController
+from hvac_driver import HvacDriver
 
 CYCLE_TIME = 2 * 60  # minutes converted to seconds
 SENSOR_STALE_TIMEOUT = 1 * 60  # minutes converted to seconds
@@ -32,10 +33,13 @@ class Controller:
         self.history = []
         self.log = log
         self.gpio_controller = GpioController(log)
+        self.hvac_driver = HvacDriver(self.gpio_controller, self.log)
 
         try:
             with open("status.json", "r", encoding="utf-8") as file:
                 self.status = models.Status.model_validate_json(file.read())
+                self.gpio_controller.pins_status = self.status.pins
+                self.gpio_controller.usable = self.status.usable
         # pylint: disable=W0718
         except Exception:
             self.log.info("No status file found. Using default values.")
@@ -74,6 +78,7 @@ class Controller:
     def set_usable(self, ac: bool, cooler: bool, furnace: bool):
         """Set which systems the thermostat can use."""
         usable = models.Usable(ac=ac, cooler=cooler, furnace=furnace)
+        self.gpio_controller.usable = usable
         self.status.usable = usable
 
 
@@ -99,43 +104,7 @@ class Controller:
             self._remove_stale_sensors()
             self.status.average_temp = self._get_average_temp()
             if not self.status.manual_override:
-                if (self.last_update_time is None or time.time() -
-                        self.last_update_time >= CYCLE_TIME):
-                    temp_diff = self.status.average_temp - self.status.target_temp
-                    if self.status.pins.ac or self.status.pins.fan_on:
-                        if self.status.usable.ac:
-                            if temp_diff <= 1:
-                                self.gpio_controller.all_off()
-                                self.last_update_time = time.time()
-                            else:
-                                self.gpio_controller.ac_on()
-                        elif self.status.usable.cooler:
-                            if temp_diff <= 1:
-                                self.gpio_controller.all_off()
-                                self.last_update_time = time.time()
-                            else:
-                                self.gpio_controller.fan_low_on()
-                        else:
-                            self.gpio_controller.all_off()
-                    elif self.status.pins.furnace:
-                        if temp_diff >= -1:
-                            self.gpio_controller.all_off()
-                            self.last_update_time = time.time()
-                        else:
-                            self.gpio_controller.furnace_on()
-                    else:
-                        if temp_diff <= -2:
-                            self.gpio_controller.furnace_on()
-                            self.last_update_time = time.time()
-                        elif temp_diff >= 2:
-                            if self.status.usable.ac:
-                                self.gpio_controller.ac_on()
-                                self.last_update_time = time.time()
-                            elif self.status.usable.cooler:
-                                self.gpio_controller.fan_low_on()
-                                self.last_update_time = time.time()
-                        else:
-                            self.gpio_controller.all_off()
+                self.hvac_driver.drive_hvac(self.status.average_temp, self.status.target_temp)
             self.status.pins = self.gpio_controller.pins_status
             self._write_status()
         # pylint: disable=W0718

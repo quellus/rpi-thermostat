@@ -9,8 +9,8 @@ import time
 class TestHvacDriver(unittest.TestCase):
     def setUp(self):
         self.log = unittest.mock.MagicMock()
-        self.hvac_driver = hvac_driver.HvacDriver(self.log)
-        self.hvac_driver.gpio_controller = unittest.mock.MagicMock()
+        self.gpio_controller = unittest.mock.MagicMock()
+        self.hvac_driver = hvac_driver.HvacDriver(self.gpio_controller, self.log)
 
 
     def test_drive_hvac__drives_after_2_minutes(self):
