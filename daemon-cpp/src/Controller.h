@@ -4,6 +4,8 @@
 #include <vector>
 #include <mutex>
 
+#include "Models.h"
+
 class Controller{
 public:
 	// Fetch singleton across threads

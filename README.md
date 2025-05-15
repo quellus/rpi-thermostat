@@ -37,7 +37,7 @@ The thermostat gathers temperature data from multiple ESP8266 modules. The tempe
 
 #### Dependencies
 apt requirements:  
-nginx libsystemd-dev
+nginx libsystemd-dev libasio-dev
 
  - `cd rpi-thermostat/daemon`
  - Setup a virtual environment `python -m venv .venv`

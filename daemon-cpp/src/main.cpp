@@ -11,6 +11,9 @@ int main(int argc, char* argv[]) {
 
     CROW_ROUTE(app, "/get_target_temperature").methods("GET"_method)([](){
         static Controller& controller = Controller::getStaticObject();
+        return 200;
     });
+    
+    app.port(DEFAULT_PORT).multithreaded().run();
 }
 
