@@ -1,3 +1,4 @@
+#include <string>
 
 struct PinStatus {
 	bool ac = false;
@@ -5,6 +6,7 @@ struct PinStatus {
 };
 
 struct SensorStatus {
+	std::string name;
 	float temperature;
 	float humidity;
 	int time;

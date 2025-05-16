@@ -13,18 +13,13 @@ public:
 
 	Controller() = default;
 
-	Controller(Controller const& other);
-
-	Controller& operator=(Controller const& other);
-
 private:
 	float targetTemperature;
-	// usable
-	// sensors status
-	// pin status
-	// manual override?
-	// sensor history
-	
+	PinStatus pinStatus;
+	PinStatus usable;
+	std::vector<SensorStatus> sensorStatus;
+  //std::vector<int> history; // TODO make this not an int
+  
 	mutable std::mutex m_mutex;
 };
 
