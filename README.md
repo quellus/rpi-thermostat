@@ -1,3 +1,5 @@
+**Note:** This thermostat worked perffectly for my needs at the time and was a really fun project to work on. I no longer live in the residence I designed it for and will not be able to continue development.
+
 # rpi-thermostat
 
 A cooler and furnace controller run by a RaspberryPi with wireless arduino-based temperature sensors.
